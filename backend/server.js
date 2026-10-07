@@ -12,7 +12,7 @@ const upload = multer({
 });
 
 // Deployed Python AI service
-const AI_URL = "https://wasteflow-ai.onrender.com";
+const AI_URL = "https://wasteflow-ai1.onrender.com";
 
 // Temporary report storage
 const reports = [];
