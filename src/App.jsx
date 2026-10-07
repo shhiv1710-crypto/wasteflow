@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+
 import {
   MapContainer,
   TileLayer,
@@ -19,11 +20,27 @@ import { auth, googleProvider } from "./firebase";
 import "leaflet/dist/leaflet.css";
 import "./App.css";
 
+/* =========================================================
+   WASTEFLOW BACKEND
+   ========================================================= */
+
+const API_URL =
+  "https://wasteflow-backend-cp1x.onrender.com";
+
+/* =========================================================
+   GENERAL
+   ========================================================= */
+
 const DEFAULT_CENTER = [30.900965, 75.857277];
 
 const MUNICIPAL_EMAILS = [
+  // Add municipal email here if required
   // "municipal@example.com"
 ];
+
+/* =========================================================
+   CLEANUP LOCATIONS
+   ========================================================= */
 
 const cleanupLocations = [
   {
@@ -55,6 +72,10 @@ const cleanupLocations = [
   }
 ];
 
+/* =========================================================
+   MAP CONTROLLER
+   ========================================================= */
+
 function MapController({ center, zoom }) {
   const map = useMap();
 
@@ -73,8 +94,14 @@ function MapController({ center, zoom }) {
   return null;
 }
 
+/* =========================================================
+   APP
+   ========================================================= */
+
 function App() {
-  /* ================= AUTH ================= */
+  /* =======================================================
+     AUTH
+     ======================================================= */
 
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -105,13 +132,28 @@ function App() {
     try {
       setLoginLoading(true);
       setAuthError("");
-      await signInWithPopup(auth, googleProvider);
-    } catch (error) {
-      console.error("Google login error:", error);
 
-      if (error.code === "auth/popup-closed-by-user") {
-        setAuthError("Google sign-in was cancelled.");
-      } else if (error.code === "auth/popup-blocked") {
+      await signInWithPopup(
+        auth,
+        googleProvider
+      );
+    } catch (error) {
+      console.error(
+        "Google login error:",
+        error
+      );
+
+      if (
+        error.code ===
+        "auth/popup-closed-by-user"
+      ) {
+        setAuthError(
+          "Google sign-in was cancelled."
+        );
+      } else if (
+        error.code ===
+        "auth/popup-blocked"
+      ) {
         setAuthError(
           "Your browser blocked the Google login popup. Please allow popups for WasteFlow."
         );
@@ -130,38 +172,73 @@ function App() {
       await signOut(auth);
       setActivePage("home");
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error(
+        "Logout error:",
+        error
+      );
     }
   };
 
-  /* ================= GENERAL DATA ================= */
+  /* =======================================================
+     REPORT WASTE
+     ======================================================= */
 
-  const [showReport, setShowReport] = useState(false);
-  const [image, setImage] = useState(null);
-  const [imageFile, setImageFile] = useState(null);
+  const [showReport, setShowReport] =
+    useState(false);
 
-  const [analyzing, setAnalyzing] = useState(false);
-  const [analysis, setAnalysis] = useState(null);
+  const [image, setImage] =
+    useState(null);
 
-  const [location, setLocation] = useState("");
-  const [gettingLocation, setGettingLocation] = useState(false);
+  const [imageFile, setImageFile] =
+    useState(null);
 
-  const [submitted, setSubmitted] = useState(false);
+  const [analyzing, setAnalyzing] =
+    useState(false);
 
-  const [reports, setReports] = useState([]);
-  const [loadingReports, setLoadingReports] = useState(false);
+  const [analysis, setAnalysis] =
+    useState(null);
 
-  /* ================= USER DATA ================= */
+  const [location, setLocation] =
+    useState("");
+
+  const [gettingLocation, setGettingLocation] =
+    useState(false);
+
+  const [submitted, setSubmitted] =
+    useState(false);
+
+  /* =======================================================
+     REPORTS
+     ======================================================= */
+
+  const [reports, setReports] =
+    useState([]);
+
+  const [loadingReports, setLoadingReports] =
+    useState(false);
+
+  /* =======================================================
+     USER DATA
+     ======================================================= */
 
   const storageKey = user
     ? `wasteflow_user_${user.uid}`
     : null;
 
-  const [greenPoints, setGreenPoints] = useState(0);
-  const [cleanupCompleted, setCleanupCompleted] = useState(0);
-  const [plantationStarted, setPlantationStarted] = useState(false);
-  const [plantationDay, setPlantationDay] = useState(0);
-  const [achievements, setAchievements] = useState([]);
+  const [greenPoints, setGreenPoints] =
+    useState(0);
+
+  const [cleanupCompleted, setCleanupCompleted] =
+    useState(0);
+
+  const [plantationStarted, setPlantationStarted] =
+    useState(false);
+
+  const [plantationDay, setPlantationDay] =
+    useState(0);
+
+  const [achievements, setAchievements] =
+    useState([]);
 
   const [leaderboard] = useState([
     {
@@ -183,15 +260,37 @@ function App() {
 
     try {
       const saved =
-        JSON.parse(localStorage.getItem(storageKey)) || {};
+        JSON.parse(
+          localStorage.getItem(
+            storageKey
+          )
+        ) || {};
 
-      setGreenPoints(saved.greenPoints || 0);
-      setCleanupCompleted(saved.cleanupCompleted || 0);
-      setPlantationStarted(saved.plantationStarted || false);
-      setPlantationDay(saved.plantationDay || 0);
-      setAchievements(saved.achievements || []);
+      setGreenPoints(
+        saved.greenPoints || 0
+      );
+
+      setCleanupCompleted(
+        saved.cleanupCompleted || 0
+      );
+
+      setPlantationStarted(
+        saved.plantationStarted ||
+          false
+      );
+
+      setPlantationDay(
+        saved.plantationDay || 0
+      );
+
+      setAchievements(
+        saved.achievements || []
+      );
     } catch (error) {
-      console.error("Could not load account data:", error);
+      console.error(
+        "Could not load account data:",
+        error
+      );
     }
   }, [storageKey]);
 
@@ -206,7 +305,10 @@ function App() {
       achievements
     };
 
-    localStorage.setItem(storageKey, JSON.stringify(data));
+    localStorage.setItem(
+      storageKey,
+      JSON.stringify(data)
+    );
   }, [
     storageKey,
     greenPoints,
@@ -217,71 +319,144 @@ function App() {
   ]);
 
   const addPoints = (points) => {
-    setGreenPoints((previous) => previous + points);
+    setGreenPoints(
+      (previous) =>
+        previous + points
+    );
   };
 
-  const addAchievement = (achievement) => {
-    setAchievements((previous) => {
-      if (previous.includes(achievement)) {
-        return previous;
+  const addAchievement = (
+    achievement
+  ) => {
+    setAchievements(
+      (previous) => {
+        if (
+          previous.includes(
+            achievement
+          )
+        ) {
+          return previous;
+        }
+
+        return [
+          ...previous,
+          achievement
+        ];
       }
-
-      return [...previous, achievement];
-    });
+    );
   };
 
-  /* ================= MAP ================= */
+  /* =======================================================
+     MAP
+     ======================================================= */
 
-  const [showMap, setShowMap] = useState(false);
-  const [userLocation, setUserLocation] = useState(null);
-  const [selectedCleanup, setSelectedCleanup] = useState(null);
-  const [routeCoordinates, setRouteCoordinates] = useState([]);
-  const [routeLoading, setRouteLoading] = useState(false);
-  const [mapMessage, setMapMessage] = useState("");
+  const [showMap, setShowMap] =
+    useState(false);
 
-  /* ================= CLEANUP ================= */
+  const [userLocation, setUserLocation] =
+    useState(null);
 
-  const [cleanupJoined, setCleanupJoined] = useState([]);
-  const [showCleanupMission, setShowCleanupMission] = useState(false);
+  const [selectedCleanup, setSelectedCleanup] =
+    useState(null);
 
-  const [cleanupBefore, setCleanupBefore] = useState(null);
-  const [cleanupAfter, setCleanupAfter] = useState(null);
+  const [routeCoordinates, setRouteCoordinates] =
+    useState([]);
 
-  const [cleanupBeforePreview, setCleanupBeforePreview] = useState(null);
-  const [cleanupAfterPreview, setCleanupAfterPreview] = useState(null);
+  const [routeLoading, setRouteLoading] =
+    useState(false);
 
-  const [cleanupChecking, setCleanupChecking] = useState(false);
-  const [cleanupVerified, setCleanupVerified] = useState(false);
-  const [cleanupPercent, setCleanupPercent] = useState(null);
-  const [cleanupEvidenceStatus, setCleanupEvidenceStatus] = useState("");
+  const [mapMessage, setMapMessage] =
+    useState("");
 
-  /* ================= PLANTATION ================= */
+  /* =======================================================
+     CLEANUP
+     ======================================================= */
 
-  const [showPlantation, setShowPlantation] = useState(false);
-  const [plantationPhoto, setPlantationPhoto] = useState(null);
-  const [plantationPreview, setPlantationPreview] = useState(null);
-  const [plantationChecking, setPlantationChecking] = useState(false);
-  const [plantationVerified, setPlantationVerified] = useState(false);
+  const [cleanupJoined, setCleanupJoined] =
+    useState([]);
 
-  /* ================= MUNICIPAL ================= */
+  const [showCleanupMission, setShowCleanupMission] =
+    useState(false);
 
-  const [municipalStatus, setMunicipalStatus] = useState({});
+  const [cleanupBefore, setCleanupBefore] =
+    useState(null);
 
-  /* ================= REPORTS ================= */
+  const [cleanupAfter, setCleanupAfter] =
+    useState(null);
+
+  const [cleanupBeforePreview, setCleanupBeforePreview] =
+    useState(null);
+
+  const [cleanupAfterPreview, setCleanupAfterPreview] =
+    useState(null);
+
+  const [cleanupChecking, setCleanupChecking] =
+    useState(false);
+
+  const [cleanupVerified, setCleanupVerified] =
+    useState(false);
+
+  const [cleanupPercent, setCleanupPercent] =
+    useState(null);
+
+  const [cleanupEvidenceStatus, setCleanupEvidenceStatus] =
+    useState("");
+
+  /* =======================================================
+     PLANTATION
+     ======================================================= */
+
+  const [showPlantation, setShowPlantation] =
+    useState(false);
+
+  const [plantationPhoto, setPlantationPhoto] =
+    useState(null);
+
+  const [plantationPreview, setPlantationPreview] =
+    useState(null);
+
+  const [plantationChecking, setPlantationChecking] =
+    useState(false);
+
+  const [plantationVerified, setPlantationVerified] =
+    useState(false);
+
+  /* =======================================================
+     MUNICIPAL
+     ======================================================= */
+
+  const [municipalStatus, setMunicipalStatus] =
+    useState({});
+
+  /* =======================================================
+     LOAD REPORTS FROM RENDER BACKEND
+     ======================================================= */
 
   const loadReports = async () => {
     try {
       setLoadingReports(true);
 
       const response = await fetch(
-        "https://wasteflow-backend-cp1x.onrender.com/reports"
+        `${API_URL}/reports`
       );
 
-      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(
+          `Reports request failed: ${response.status}`
+        );
+      }
 
-      setReports(data.reports || []);
+      const data =
+        await response.json();
+
+      setReports(
+        data.reports || []
+      );
     } catch (error) {
-      console.error("Could not load reports:", error);
+      console.error(
+        "Could not load reports:",
+        error
+      );
     } finally {
       setLoadingReports(false);
     }
@@ -293,14 +468,21 @@ function App() {
     }
   }, [user]);
 
-  const updateMunicipalStatus = (reportId, status) => {
-    setMunicipalStatus((previous) => ({
-      ...previous,
-      [reportId]: status
-    }));
+  const updateMunicipalStatus = (
+    reportId,
+    status
+  ) => {
+    setMunicipalStatus(
+      (previous) => ({
+        ...previous,
+        [reportId]: status
+      })
+    );
   };
 
-  /* ================= USER LOCATION ================= */
+  /* =======================================================
+     USER LOCATION
+     ======================================================= */
 
   const getUserLocation = () => {
     if (!navigator.geolocation) {
@@ -310,7 +492,9 @@ function App() {
       return;
     }
 
-    setMapMessage("Getting your location...");
+    setMapMessage(
+      "Getting your location..."
+    );
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -320,7 +504,10 @@ function App() {
         ];
 
         setUserLocation(coords);
-        setMapMessage("Your location detected.");
+
+        setMapMessage(
+          "Your location detected."
+        );
       },
       () => {
         setMapMessage(
@@ -335,7 +522,9 @@ function App() {
     );
   };
 
-  /* ================= MAP ================= */
+  /* =======================================================
+     OPEN MAP
+     ======================================================= */
 
   const openMap = () => {
     setShowMap(true);
@@ -354,26 +543,36 @@ function App() {
     setSelectedCleanup(null);
   };
 
-  const selectCleanup = (cleanup) => {
+  const selectCleanup = (
+    cleanup
+  ) => {
     setSelectedCleanup(cleanup);
     setRouteCoordinates([]);
     setMapMessage("");
   };
 
-  /* ================= ROUTE ================= */
+  /* =======================================================
+     ROUTE
+     ======================================================= */
 
   const getRoute = async () => {
     if (!selectedCleanup) return;
 
     if (!userLocation) {
-      setMapMessage("Please allow location access first.");
+      setMapMessage(
+        "Please allow location access first."
+      );
+
       getUserLocation();
       return;
     }
 
     try {
       setRouteLoading(true);
-      setMapMessage("Calculating route...");
+
+      setMapMessage(
+        "Calculating route..."
+      );
 
       const start =
         `${userLocation[1]},${userLocation[0]}`;
@@ -381,31 +580,47 @@ function App() {
       const end =
         `${selectedCleanup.lng},${selectedCleanup.lat}`;
 
-      const response = await fetch(
-        `https://router.project-osrm.org/route/v1/driving/${start};${end}?overview=full&geometries=geojson`
-      );
+      const response =
+        await fetch(
+          `https://router.project-osrm.org/route/v1/driving/${start};${end}?overview=full&geometries=geojson`
+        );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
-      if (!data.routes || !data.routes.length) {
-        throw new Error("Route unavailable");
+      if (
+        !data.routes ||
+        !data.routes.length
+      ) {
+        throw new Error(
+          "Route unavailable"
+        );
       }
 
-      const route = data.routes[0];
+      const route =
+        data.routes[0];
 
       const coordinates =
-        route.geometry.coordinates.map((point) => [
-          point[1],
-          point[0]
-        ]);
+        route.geometry.coordinates.map(
+          (point) => [
+            point[1],
+            point[0]
+          ]
+        );
 
-      setRouteCoordinates(coordinates);
+      setRouteCoordinates(
+        coordinates
+      );
 
       const distanceKm =
-        (route.distance / 1000).toFixed(1);
+        (
+          route.distance / 1000
+        ).toFixed(1);
 
       const durationMin =
-        Math.round(route.duration / 60);
+        Math.round(
+          route.duration / 60
+        );
 
       setMapMessage(
         `${distanceKm} km • approximately ${durationMin} min`
@@ -421,19 +636,35 @@ function App() {
     }
   };
 
-  /* ================= JOIN CLEANUP ================= */
+  /* =======================================================
+     JOIN CLEANUP
+     ======================================================= */
 
-  const joinCleanup = (cleanup) => {
-    if (!cleanupJoined.includes(cleanup.id)) {
-      setCleanupJoined((previous) => [
-        ...previous,
+  const joinCleanup = (
+    cleanup
+  ) => {
+    if (
+      !cleanupJoined.includes(
         cleanup.id
-      ]);
+      )
+    ) {
+      setCleanupJoined(
+        (previous) => [
+          ...previous,
+          cleanup.id
+        ]
+      );
     }
 
-    setSelectedCleanup(cleanup);
+    setSelectedCleanup(
+      cleanup
+    );
+
     setShowMap(false);
-    setShowCleanupMission(true);
+
+    setShowCleanupMission(
+      true
+    );
 
     setCleanupBefore(null);
     setCleanupAfter(null);
@@ -444,29 +675,49 @@ function App() {
     setCleanupEvidenceStatus("");
   };
 
-  const handleCleanupBefore = (event) => {
-    const file = event.target.files?.[0];
+  const handleCleanupBefore = (
+    event
+  ) => {
+    const file =
+      event.target.files?.[0];
 
     if (!file) return;
 
     setCleanupBefore(file);
-    setCleanupBeforePreview(URL.createObjectURL(file));
+
+    setCleanupBeforePreview(
+      URL.createObjectURL(file)
+    );
+
     setCleanupVerified(false);
   };
 
-  const handleCleanupAfter = (event) => {
-    const file = event.target.files?.[0];
+  const handleCleanupAfter = (
+    event
+  ) => {
+    const file =
+      event.target.files?.[0];
 
     if (!file) return;
 
     setCleanupAfter(file);
-    setCleanupAfterPreview(URL.createObjectURL(file));
+
+    setCleanupAfterPreview(
+      URL.createObjectURL(file)
+    );
+
     setCleanupVerified(false);
   };
 
   const verifyCleanup = async () => {
-    if (!cleanupBefore || !cleanupAfter) {
-      alert("Please upload both BEFORE and AFTER photos.");
+    if (
+      !cleanupBefore ||
+      !cleanupAfter
+    ) {
+      alert(
+        "Please upload both BEFORE and AFTER photos."
+      );
+
       return;
     }
 
@@ -483,30 +734,49 @@ function App() {
       );
 
       addPoints(40);
-      setCleanupCompleted((previous) => previous + 1);
-      addAchievement("Verified Cleanup");
+
+      setCleanupCompleted(
+        (previous) =>
+          previous + 1
+      );
+
+      addAchievement(
+        "Verified Cleanup"
+      );
     }, 1800);
   };
 
-  /* ================= PLANTATION ================= */
+  /* =======================================================
+     PLANTATION
+     ======================================================= */
 
   const openPlantation = () => {
     setShowPlantation(true);
   };
 
-  const handlePlantationPhoto = (event) => {
-    const file = event.target.files?.[0];
+  const handlePlantationPhoto = (
+    event
+  ) => {
+    const file =
+      event.target.files?.[0];
 
     if (!file) return;
 
     setPlantationPhoto(file);
-    setPlantationPreview(URL.createObjectURL(file));
+
+    setPlantationPreview(
+      URL.createObjectURL(file)
+    );
+
     setPlantationVerified(false);
   };
 
   const startPlantation = () => {
     if (!plantationPhoto) {
-      alert("Please upload a plantation photo first.");
+      alert(
+        "Please upload a plantation photo first."
+      );
+
       return;
     }
 
@@ -514,16 +784,28 @@ function App() {
 
     setTimeout(() => {
       setPlantationChecking(false);
-      setPlantationStarted(true);
-      setPlantationVerified(true);
+
+      setPlantationStarted(
+        true
+      );
+
+      setPlantationVerified(
+        true
+      );
+
       setPlantationDay(0);
 
       addPoints(10);
-      addAchievement("Plantation Started");
+
+      addAchievement(
+        "Plantation Started"
+      );
     }, 1800);
   };
 
-  /* ================= REPORT ================= */
+  /* =======================================================
+     REPORT
+     ======================================================= */
 
   const openReport = () => {
     setShowReport(true);
@@ -538,214 +820,471 @@ function App() {
     setShowReport(false);
   };
 
-  const handleImageUpload = (event) => {
-    const file = event.target.files?.[0];
+  const handleImageUpload = (
+    event
+  ) => {
+    const file =
+      event.target.files?.[0];
 
     if (!file) return;
 
     setImageFile(file);
-    setImage(URL.createObjectURL(file));
+
+    setImage(
+      URL.createObjectURL(file)
+    );
+
     setAnalysis(null);
     setSubmitted(false);
   };
 
-  /* =====================================================
+  /* =======================================================
      AI ANALYSIS
-     ===================================================== */
+     
+     IMPORTANT:
+     Browser → Render Backend → AI
+     
+     NO localhost / 127.0.0.1 here.
+     ======================================================= */
 
   const analyzeWaste = async () => {
     if (!imageFile) {
-      alert("Please upload an image first.");
+      alert(
+        "Please upload an image first."
+      );
+
       return;
     }
 
     try {
       setAnalyzing(true);
 
-      const formData = new FormData();
+      const formData =
+        new FormData();
 
-      formData.append("image", imageFile);
-
-      const response = await fetch(
-        window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1"
-          ? "http://127.0.0.1:8000/classify"
-          : "https://wasteflow-backend-cp1x.onrender.com/analyze",
-        {
-          method: "POST",
-          body: formData
-        }
+      formData.append(
+        "image",
+        imageFile
       );
 
-      const data = await response.json();
+      console.log(
+        "Sending image to:",
+        `${API_URL}/analyze`
+      );
 
-      if (!response.ok) {
+      const response =
+        await fetch(
+          `${API_URL}/analyze`,
+          {
+            method: "POST",
+            body: formData
+          }
+        );
+
+      let data;
+
+      try {
+        data =
+          await response.json();
+      } catch {
         throw new Error(
-          data.error || "Analysis failed"
+          "Backend returned an invalid response."
         );
       }
 
-      console.log("AI RESPONSE:", data);
+      console.log(
+        "AI BACKEND RESPONSE:",
+        data
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+            data.message ||
+            `Analysis failed with status ${response.status}`
+        );
+      }
+
+      /*
+       * Support several possible backend response formats.
+       */
 
       const prediction =
-        String(data.prediction || "Unknown").toLowerCase();
+        String(
+          data.prediction ||
+            data.label ||
+            data.type ||
+            data.class ||
+            "Unknown"
+        ).toLowerCase();
 
-      let type = "Mixed Waste";
-      let severity = "Medium";
-      let recyclable = "No";
+      /*
+       * Defaults
+       */
+
+      let type =
+        "Mixed Waste";
+
+      let severity =
+        "Medium";
+
+      let recyclable =
+        "No";
+
       let recovery =
         "Dispose through municipal waste collection";
+
       let action =
         "Place in the appropriate municipal waste bin.";
 
-      /* PAPER */
+      /* =====================================================
+         PAPER
+         ===================================================== */
 
       if (
-        prediction.includes("paper") ||
-        prediction.includes("notebook") ||
-        prediction.includes("book") ||
-        prediction.includes("document") ||
-        prediction.includes("cardboard")
+        prediction.includes(
+          "paper"
+        ) ||
+        prediction.includes(
+          "notebook"
+        ) ||
+        prediction.includes(
+          "book"
+        ) ||
+        prediction.includes(
+          "document"
+        ) ||
+        prediction.includes(
+          "cardboard"
+        )
       ) {
-        type = "Paper / Cardboard";
-        severity = "Low";
-        recyclable = "Yes ♻️";
-        recovery = "Paper recycling";
+        type =
+          "Paper / Cardboard";
+
+        severity =
+          "Low";
+
+        recyclable =
+          "Yes ♻️";
+
+        recovery =
+          "Paper recycling";
+
         action =
           "Keep dry and place in the recyclable/dry-waste stream.";
       }
 
-      /* PLASTIC */
+      /* =====================================================
+         PLASTIC
+         ===================================================== */
 
       else if (
-        prediction.includes("plastic") ||
-        prediction.includes("bottle") ||
-        prediction.includes("wrapper") ||
-        prediction.includes("container") ||
-        prediction.includes("packet")
+        prediction.includes(
+          "plastic"
+        ) ||
+        prediction.includes(
+          "bottle"
+        ) ||
+        prediction.includes(
+          "wrapper"
+        ) ||
+        prediction.includes(
+          "container"
+        ) ||
+        prediction.includes(
+          "packet"
+        )
       ) {
-        type = "Plastic";
-        severity = "Medium";
-        recyclable = "Usually Yes ♻️";
-        recovery = "Plastic recycling";
+        type =
+          "Plastic";
+
+        severity =
+          "Medium";
+
+        recyclable =
+          "Usually Yes ♻️";
+
+        recovery =
+          "Plastic recycling";
+
         action =
           "Empty, rinse if possible and place in the dry/recyclable waste stream.";
       }
 
-      /* METAL */
+      /* =====================================================
+         METAL
+         ===================================================== */
 
       else if (
-        prediction.includes("metal") ||
-        prediction.includes("can") ||
-        prediction.includes("tin") ||
-        prediction.includes("aluminum") ||
-        prediction.includes("steel")
+        prediction.includes(
+          "metal"
+        ) ||
+        prediction.includes(
+          "can"
+        ) ||
+        prediction.includes(
+          "tin"
+        ) ||
+        prediction.includes(
+          "aluminum"
+        ) ||
+        prediction.includes(
+          "steel"
+        )
       ) {
-        type = "Metal";
-        severity = "Low";
-        recyclable = "Yes ♻️";
-        recovery = "Metal recycling";
+        type =
+          "Metal";
+
+        severity =
+          "Low";
+
+        recyclable =
+          "Yes ♻️";
+
+        recovery =
+          "Metal recycling";
+
         action =
           "Separate from wet waste and send to a metal recycler.";
       }
 
-      /* GLASS */
+      /* =====================================================
+         GLASS
+         ===================================================== */
 
       else if (
-        prediction.includes("glass") ||
-        prediction.includes("jar")
+        prediction.includes(
+          "glass"
+        ) ||
+        prediction.includes(
+          "jar"
+        )
       ) {
-        type = "Glass";
-        severity = "Medium";
-        recyclable = "Yes ♻️";
-        recovery = "Glass recycling";
+        type =
+          "Glass";
+
+        severity =
+          "Medium";
+
+        recyclable =
+          "Yes ♻️";
+
+        recovery =
+          "Glass recycling";
+
         action =
           "Handle carefully and place in the designated glass/recyclable stream.";
       }
 
-      /* ORGANIC */
+      /* =====================================================
+         ORGANIC
+         ===================================================== */
 
       else if (
-        prediction.includes("food") ||
-        prediction.includes("fruit") ||
-        prediction.includes("vegetable") ||
-        prediction.includes("banana") ||
-        prediction.includes("apple") ||
-        prediction.includes("organic")
+        prediction.includes(
+          "food"
+        ) ||
+        prediction.includes(
+          "fruit"
+        ) ||
+        prediction.includes(
+          "vegetable"
+        ) ||
+        prediction.includes(
+          "banana"
+        ) ||
+        prediction.includes(
+          "apple"
+        ) ||
+        prediction.includes(
+          "organic"
+        )
       ) {
-        type = "Organic Waste";
-        severity = "Medium";
-        recyclable = "No";
+        type =
+          "Organic Waste";
+
+        severity =
+          "Medium";
+
+        recyclable =
+          "No";
+
         recovery =
           "Composting / organic waste processing";
+
         action =
           "Separate from dry waste and send for composting or wet-waste processing.";
       }
 
-      /* FOOTWEAR */
+      /* =====================================================
+         FOOTWEAR
+         ===================================================== */
 
       else if (
-        prediction.includes("shoe") ||
-        prediction.includes("sandal") ||
-        prediction.includes("slipper") ||
-        prediction.includes("boot") ||
-        prediction.includes("footwear")
+        prediction.includes(
+          "shoe"
+        ) ||
+        prediction.includes(
+          "sandal"
+        ) ||
+        prediction.includes(
+          "slipper"
+        ) ||
+        prediction.includes(
+          "boot"
+        ) ||
+        prediction.includes(
+          "footwear"
+        )
       ) {
-        type = "Footwear";
-        severity = "Medium";
-        recyclable = "Limited";
+        type =
+          "Footwear";
+
+        severity =
+          "Medium";
+
+        recyclable =
+          "Limited";
+
         recovery =
           "Reuse / footwear or textile collection";
+
         action =
           "Donate or reuse if usable; otherwise send to a textile/footwear recovery facility.";
       }
 
-      /* TEXTILE */
+      /* =====================================================
+         TEXTILE
+         ===================================================== */
 
       else if (
-        prediction.includes("cloth") ||
-        prediction.includes("shirt") ||
-        prediction.includes("jean") ||
-        prediction.includes("jacket") ||
-        prediction.includes("textile")
+        prediction.includes(
+          "cloth"
+        ) ||
+        prediction.includes(
+          "shirt"
+        ) ||
+        prediction.includes(
+          "jean"
+        ) ||
+        prediction.includes(
+          "jacket"
+        ) ||
+        prediction.includes(
+          "textile"
+        )
       ) {
-        type = "Textile";
-        severity = "Low";
-        recyclable = "Limited";
+        type =
+          "Textile";
+
+        severity =
+          "Low";
+
+        recyclable =
+          "Limited";
+
         recovery =
           "Textile recycling / reuse";
+
         action =
           "Donate or reuse if usable; otherwise send to textile recovery.";
       }
 
-      /* E-WASTE */
+      /* =====================================================
+         E-WASTE
+         ===================================================== */
 
       else if (
-        prediction.includes("battery") ||
-        prediction.includes("electronic") ||
-        prediction.includes("phone") ||
-        prediction.includes("computer") ||
-        prediction.includes("laptop")
+        prediction.includes(
+          "battery"
+        ) ||
+        prediction.includes(
+          "electronic"
+        ) ||
+        prediction.includes(
+          "phone"
+        ) ||
+        prediction.includes(
+          "computer"
+        ) ||
+        prediction.includes(
+          "laptop"
+        )
       ) {
-        type = "E-Waste";
-        severity = "High";
-        recyclable = "Yes — special handling ♻️";
+        type =
+          "E-Waste";
+
+        severity =
+          "High";
+
+        recyclable =
+          "Yes — special handling ♻️";
+
         recovery =
           "Authorized e-waste recycler";
+
         action =
           "Do not put in normal household waste. Send to an authorized e-waste collection point.";
       }
 
+      /*
+       * Normalize confidence.
+       */
+
+      let confidence =
+        data.confidence;
+
+      if (
+        confidence !== undefined &&
+        confidence !== null
+      ) {
+        confidence =
+          Number(
+            confidence
+          );
+
+        /*
+         * If backend sends 0.57,
+         * convert to 57.00.
+         */
+
+        if (
+          confidence <= 1
+        ) {
+          confidence *= 100;
+        }
+
+        confidence =
+          confidence.toFixed(2);
+      } else {
+        confidence =
+          "N/A";
+      }
+
       const normalizedAnalysis = {
         success: true,
+
         type,
-        confidence: data.confidence,
+
+        confidence,
+
         severity,
+
         recyclable,
+
         recovery,
+
         action,
-        prediction: data.prediction,
-        raw_results: data.raw_results || []
+
+        prediction:
+          data.prediction ||
+          data.label ||
+          "Unknown",
+
+        raw_results:
+          data.raw_results ||
+          data.results ||
+          []
       };
 
       console.log(
@@ -753,24 +1292,34 @@ function App() {
         normalizedAnalysis
       );
 
-      setAnalysis(normalizedAnalysis);
+      setAnalysis(
+        normalizedAnalysis
+      );
 
     } catch (error) {
-      console.error("AI analysis error:", error);
+      console.error(
+        "AI analysis error:",
+        error
+      );
 
       alert(
-        "AI analysis failed. Make sure the Python AI server is running."
+        `AI analysis failed.\n\n${error.message}\n\nPlease make sure your Render backend and AI server are running.`
       );
     } finally {
       setAnalyzing(false);
     }
   };
 
-  /* ================= REPORT LOCATION ================= */
+  /* =======================================================
+     REPORT LOCATION
+     ======================================================= */
 
   const getLocation = () => {
     if (!navigator.geolocation) {
-      alert("Location is not supported.");
+      alert(
+        "Location is not supported."
+      );
+
       return;
     }
 
@@ -785,82 +1334,140 @@ function App() {
           const longitude =
             position.coords.longitude;
 
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
-          );
+          const response =
+            await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+            );
 
-          const data = await response.json();
+          const data =
+            await response.json();
 
           setLocation(
             data.display_name ||
-            "Location detected"
+              "Location detected"
           );
         } catch {
-          setLocation("Location detected");
+          setLocation(
+            "Location detected"
+          );
         } finally {
-          setGettingLocation(false);
+          setGettingLocation(
+            false
+          );
         }
       },
       () => {
-        setGettingLocation(false);
-        alert("Please allow location access.");
+        setGettingLocation(
+          false
+        );
+
+        alert(
+          "Please allow location access."
+        );
       }
     );
   };
 
-  /* ================= SUBMIT REPORT ================= */
+  /* =======================================================
+     SUBMIT REPORT
+     ======================================================= */
 
   const submitReport = async () => {
     if (!analysis) return;
 
     try {
-      const response = await fetch(
-        "https://wasteflow-backend-cp1x.onrender.com/reports",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            type: analysis.type,
-            confidence: analysis.confidence,
-            severity: analysis.severity,
-            recyclable: analysis.recyclable,
-            recovery: analysis.recovery,
-            action: analysis.action,
-            location:
-              location || "Location not provided",
-            userEmail: user?.email || "",
-            userName: user?.displayName || ""
-          })
-        }
-      );
+      const response =
+        await fetch(
+          `${API_URL}/reports`,
+          {
+            method: "POST",
 
-      const data = await response.json();
+            headers: {
+              "Content-Type":
+                "application/json"
+            },
+
+            body: JSON.stringify({
+              type:
+                analysis.type,
+
+              confidence:
+                analysis.confidence,
+
+              prediction:
+                analysis.prediction,
+
+              severity:
+                analysis.severity,
+
+              recyclable:
+                analysis.recyclable,
+
+              recovery:
+                analysis.recovery,
+
+              action:
+                analysis.action,
+
+              location:
+                location ||
+                "Location not provided",
+
+              userEmail:
+                user?.email || "",
+
+              userName:
+                user?.displayName || ""
+            })
+          }
+        );
+
+      let data;
+
+      try {
+        data =
+          await response.json();
+      } catch {
+        data = {};
+      }
 
       if (!response.ok) {
         throw new Error(
-          data.error || "Could not submit report"
+          data.error ||
+            data.message ||
+            "Could not submit report"
         );
       }
 
       setSubmitted(true);
 
       addPoints(10);
-      addAchievement("Waste Reporter");
+
+      addAchievement(
+        "Waste Reporter"
+      );
 
       await loadReports();
 
     } catch (error) {
-      console.error(error);
+      console.error(
+        "Submit report error:",
+        error
+      );
 
-      alert("Could not submit waste report.");
+      alert(
+        `Could not submit waste report.\n\n${error.message}`
+      );
     }
   };
 
-  /* ================= NAVIGATION ================= */
+  /* =======================================================
+     NAVIGATION
+     ======================================================= */
 
-  const navigate = (page) => {
+  const navigate = (
+    page
+  ) => {
     setActivePage(page);
 
     window.scrollTo({
@@ -869,112 +1476,200 @@ function App() {
     });
   };
 
-  /* ================= LEADERBOARD ================= */
+  /* =======================================================
+     LEADERBOARD
+     ======================================================= */
 
-  const currentLeaderboard = useMemo(() => {
-    const currentUserName =
-      user?.displayName || "You";
+  const currentLeaderboard =
+    useMemo(() => {
+      const currentUserName =
+        user?.displayName ||
+        "You";
 
-    const entries = [
-      ...leaderboard,
-      {
-        name: currentUserName,
-        points: greenPoints,
-        currentUser: true
-      }
-    ];
+      const entries = [
+        ...leaderboard,
 
-    return entries
-      .sort((a, b) => b.points - a.points)
-      .slice(0, 5);
-  }, [leaderboard, greenPoints, user]);
+        {
+          name:
+            currentUserName,
 
-  /* ================= STATS ================= */
+          points:
+            greenPoints,
+
+          currentUser:
+            true
+        }
+      ];
+
+      return entries
+        .sort(
+          (a, b) =>
+            b.points -
+            a.points
+        )
+        .slice(0, 5);
+    }, [
+      leaderboard,
+      greenPoints,
+      user
+    ]);
+
+  /* =======================================================
+     STATS
+     ======================================================= */
 
   const completedMissions =
     cleanupCompleted +
-    (plantationStarted ? 1 : 0);
+    (plantationStarted
+      ? 1
+      : 0);
 
   const certificateUnlocked =
     plantationStarted &&
     plantationDay >= 100;
 
-  /* ================= AUTH LOADING ================= */
+  /* =======================================================
+     AUTH LOADING
+     ======================================================= */
 
   if (authLoading) {
     return (
       <div
         style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#f5faf7",
-          fontFamily: "Arial, sans-serif"
+          minHeight:
+            "100vh",
+
+          display:
+            "flex",
+
+          alignItems:
+            "center",
+
+          justifyContent:
+            "center",
+
+          background:
+            "#f5faf7",
+
+          fontFamily:
+            "Arial, sans-serif"
         }}
       >
         <div
           style={{
-            textAlign: "center",
-            padding: "30px"
+            textAlign:
+              "center",
+
+            padding:
+              "30px"
           }}
         >
           <div
             style={{
-              fontSize: "48px",
-              marginBottom: "15px"
+              fontSize:
+                "48px",
+
+              marginBottom:
+                "15px"
             }}
           >
             🌱
           </div>
 
-          <h2>Loading WasteFlow...</h2>
+          <h2>
+            Loading WasteFlow...
+          </h2>
 
-          <p>Connecting your account</p>
+          <p>
+            Connecting your account
+          </p>
         </div>
       </div>
     );
   }
 
-  /* ================= LOGIN ================= */
+  /* =======================================================
+     LOGIN
+     ======================================================= */
 
   if (!user) {
     return (
       <div
         style={{
-          minHeight: "100vh",
+          minHeight:
+            "100vh",
+
           background:
             "linear-gradient(135deg,#eef9f1 0%,#ffffff 55%,#e8f6ee 100%)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "24px",
-          fontFamily: "Arial, sans-serif"
+
+          display:
+            "flex",
+
+          alignItems:
+            "center",
+
+          justifyContent:
+            "center",
+
+          padding:
+            "24px",
+
+          fontFamily:
+            "Arial, sans-serif"
         }}
       >
         <div
           style={{
-            width: "100%",
-            maxWidth: "430px",
-            background: "#fff",
-            borderRadius: "28px",
-            padding: "38px 30px",
+            width:
+              "100%",
+
+            maxWidth:
+              "430px",
+
+            background:
+              "#fff",
+
+            borderRadius:
+              "28px",
+
+            padding:
+              "38px 30px",
+
             boxShadow:
               "0 20px 60px rgba(20,80,50,.12)",
-            textAlign: "center"
+
+            textAlign:
+              "center"
           }}
         >
           <div
             style={{
-              width: "76px",
-              height: "76px",
-              borderRadius: "24px",
-              background: "#e5f7eb",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "0 auto 20px",
-              fontSize: "42px"
+              width:
+                "76px",
+
+              height:
+                "76px",
+
+              borderRadius:
+                "24px",
+
+              background:
+                "#e5f7eb",
+
+              display:
+                "flex",
+
+              alignItems:
+                "center",
+
+              justifyContent:
+                "center",
+
+              margin:
+                "0 auto 20px",
+
+              fontSize:
+                "42px"
             }}
           >
             🌱
@@ -982,10 +1677,17 @@ function App() {
 
           <p
             style={{
-              color: "#16834f",
-              fontWeight: "700",
-              letterSpacing: "1.5px",
-              fontSize: "12px"
+              color:
+                "#16834f",
+
+              fontWeight:
+                "700",
+
+              letterSpacing:
+                "1.5px",
+
+              fontSize:
+                "12px"
             }}
           >
             AI-POWERED ENVIRONMENTAL PLATFORM
@@ -993,9 +1695,14 @@ function App() {
 
           <h1
             style={{
-              fontSize: "38px",
-              margin: "0 0 12px",
-              color: "#163b2a"
+              fontSize:
+                "38px",
+
+              margin:
+                "0 0 12px",
+
+              color:
+                "#163b2a"
             }}
           >
             WasteFlow
@@ -1003,9 +1710,14 @@ function App() {
 
           <p
             style={{
-              color: "#66756d",
-              lineHeight: "1.6",
-              marginBottom: "30px"
+              color:
+                "#66756d",
+
+              lineHeight:
+                "1.6",
+
+              marginBottom:
+                "30px"
             }}
           >
             Report waste, complete verified environmental
@@ -1013,26 +1725,58 @@ function App() {
           </p>
 
           <button
-            onClick={handleGoogleLogin}
-            disabled={loginLoading}
+            onClick={
+              handleGoogleLogin
+            }
+            disabled={
+              loginLoading
+            }
             style={{
-              width: "100%",
-              border: "1px solid #d9e1dc",
-              background: "#fff",
-              borderRadius: "14px",
-              padding: "15px 18px",
-              fontSize: "16px",
-              fontWeight: "700",
-              cursor: loginLoading
-                ? "wait"
-                : "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "12px"
+              width:
+                "100%",
+
+              border:
+                "1px solid #d9e1dc",
+
+              background:
+                "#fff",
+
+              borderRadius:
+                "14px",
+
+              padding:
+                "15px 18px",
+
+              fontSize:
+                "16px",
+
+              fontWeight:
+                "700",
+
+              cursor:
+                loginLoading
+                  ? "wait"
+                  : "pointer",
+
+              display:
+                "flex",
+
+              alignItems:
+                "center",
+
+              justifyContent:
+                "center",
+
+              gap:
+                "12px"
             }}
           >
-            <span style={{ fontSize: "22px" }}>
+            <span
+              style={{
+                fontSize:
+                  "22px"
+              }}
+            >
               G
             </span>
 
@@ -1044,12 +1788,23 @@ function App() {
           {authError && (
             <div
               style={{
-                marginTop: "18px",
-                padding: "12px",
-                borderRadius: "10px",
-                background: "#fff2f2",
-                color: "#b42318",
-                fontSize: "13px"
+                marginTop:
+                  "18px",
+
+                padding:
+                  "12px",
+
+                borderRadius:
+                  "10px",
+
+                background:
+                  "#fff2f2",
+
+                color:
+                  "#b42318",
+
+                fontSize:
+                  "13px"
               }}
             >
               {authError}
@@ -1058,9 +1813,14 @@ function App() {
 
           <p
             style={{
-              marginTop: "25px",
-              fontSize: "12px",
-              color: "#8a968f"
+              marginTop:
+                "25px",
+
+              fontSize:
+                "12px",
+
+              color:
+                "#8a968f"
             }}
           >
             Secure Google account authentication.
@@ -1071,55 +1831,98 @@ function App() {
     );
   }
 
-  /* ================= MUNICIPAL DASHBOARD ================= */
+  /* =======================================================
+     MUNICIPAL DASHBOARD
+     ======================================================= */
 
   if (isMunicipal) {
-    const pending = reports.filter(
-      (report) =>
-        !municipalStatus[report.id] ||
-        municipalStatus[report.id] === "Pending"
-    );
+    const pending =
+      reports.filter(
+        (report) =>
+          !municipalStatus[
+            report.id
+          ] ||
+          municipalStatus[
+            report.id
+          ] === "Pending"
+      );
 
-    const inProgress = reports.filter(
-      (report) =>
-        municipalStatus[report.id] === "In Progress"
-    );
+    const inProgress =
+      reports.filter(
+        (report) =>
+          municipalStatus[
+            report.id
+          ] === "In Progress"
+      );
 
-    const completed = reports.filter(
-      (report) =>
-        municipalStatus[report.id] === "Completed"
-    );
+    const completed =
+      reports.filter(
+        (report) =>
+          municipalStatus[
+            report.id
+          ] === "Completed"
+      );
 
     return (
       <div
         style={{
-          minHeight: "100vh",
-          background: "#f5f8f6",
-          fontFamily: "Arial, sans-serif"
+          minHeight:
+            "100vh",
+
+          background:
+            "#f5f8f6",
+
+          fontFamily:
+            "Arial, sans-serif"
         }}
       >
         <nav
           style={{
-            background: "#123b2a",
-            color: "#fff",
-            padding: "18px 6%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "20px",
-            flexWrap: "wrap"
+            background:
+              "#123b2a",
+
+            color:
+              "#fff",
+
+            padding:
+              "18px 6%",
+
+            display:
+              "flex",
+
+            alignItems:
+              "center",
+
+            justifyContent:
+              "space-between",
+
+            gap:
+              "20px",
+
+            flexWrap:
+              "wrap"
           }}
         >
           <div>
-            <strong style={{ fontSize: "22px" }}>
+            <strong
+              style={{
+                fontSize:
+                  "22px"
+              }}
+            >
               🌱 WasteFlow
             </strong>
 
             <div
               style={{
-                fontSize: "12px",
-                opacity: 0.75,
-                marginTop: "3px"
+                fontSize:
+                  "12px",
+
+                opacity:
+                  0.75,
+
+                marginTop:
+                  "3px"
               }}
             >
               MUNICIPAL OPERATIONS
@@ -1128,25 +1931,49 @@ function App() {
 
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px"
+              display:
+                "flex",
+
+              alignItems:
+                "center",
+
+              gap:
+                "12px"
             }}
           >
-            <span style={{ fontSize: "13px" }}>
-              🏛️ {user.displayName || "Municipal Worker"}
+            <span
+              style={{
+                fontSize:
+                  "13px"
+              }}
+            >
+              🏛️{" "}
+              {user.displayName ||
+                "Municipal Worker"}
             </span>
 
             <button
-              onClick={handleLogout}
+              onClick={
+                handleLogout
+              }
               style={{
                 border:
                   "1px solid rgba(255,255,255,.35)",
-                background: "transparent",
-                color: "#fff",
-                padding: "9px 14px",
-                borderRadius: "9px",
-                cursor: "pointer"
+
+                background:
+                  "transparent",
+
+                color:
+                  "#fff",
+
+                padding:
+                  "9px 14px",
+
+                borderRadius:
+                  "9px",
+
+                cursor:
+                  "pointer"
               }}
             >
               Sign Out
@@ -1156,17 +1983,29 @@ function App() {
 
         <main
           style={{
-            maxWidth: "1100px",
-            margin: "0 auto",
-            padding: "40px 6%"
+            maxWidth:
+              "1100px",
+
+            margin:
+              "0 auto",
+
+            padding:
+              "40px 6%"
           }}
         >
           <p
             style={{
-              color: "#16834f",
-              fontWeight: "700",
-              fontSize: "12px",
-              letterSpacing: "1px"
+              color:
+                "#16834f",
+
+              fontWeight:
+                "700",
+
+              fontSize:
+                "12px",
+
+              letterSpacing:
+                "1px"
             }}
           >
             WORKER DASHBOARD
@@ -1174,61 +2013,104 @@ function App() {
 
           <h1
             style={{
-              margin: "5px 0 10px",
-              color: "#163b2a"
+              margin:
+                "5px 0 10px",
+
+              color:
+                "#163b2a"
             }}
           >
             Municipal Operations
           </h1>
 
-          <p style={{ color: "#66756d" }}>
+          <p
+            style={{
+              color:
+                "#66756d"
+            }}
+          >
             Review community reports, accept work and update
             completion status.
           </p>
 
           <div
             style={{
-              display: "grid",
+              display:
+                "grid",
+
               gridTemplateColumns:
                 "repeat(auto-fit,minmax(190px,1fr))",
-              gap: "15px",
-              margin: "30px 0"
+
+              gap:
+                "15px",
+
+              margin:
+                "30px 0"
             }}
           >
             <DashboardStat
               icon="🟠"
               label="Pending"
-              value={pending.length}
+              value={
+                pending.length
+              }
             />
 
             <DashboardStat
               icon="🔵"
               label="In Progress"
-              value={inProgress.length}
+              value={
+                inProgress.length
+              }
             />
 
             <DashboardStat
               icon="🟢"
               label="Completed"
-              value={completed.length}
+              value={
+                completed.length
+              }
             />
           </div>
 
-          <div style={{ display: "grid", gap: "18px" }}>
-            {reports.length === 0 ? (
+          <div
+            style={{
+              display:
+                "grid",
+
+              gap:
+                "18px"
+            }}
+          >
+            {reports.length ===
+            0 ? (
               <div
                 style={{
-                  background: "#fff",
-                  borderRadius: "18px",
-                  padding: "45px",
-                  textAlign: "center"
+                  background:
+                    "#fff",
+
+                  borderRadius:
+                    "18px",
+
+                  padding:
+                    "45px",
+
+                  textAlign:
+                    "center"
                 }}
               >
-                <div style={{ fontSize: "42px" }}>
+                <div
+                  style={{
+                    fontSize:
+                      "42px"
+                  }}
+                >
                   ✓
                 </div>
 
-                <h3>No waste reports</h3>
+                <h3>
+                  No waste reports
+                </h3>
 
                 <p>
                   New community reports will appear here.
@@ -1236,167 +2118,236 @@ function App() {
 
                 <button
                   className="primary-btn"
-                  onClick={loadReports}
+                  onClick={
+                    loadReports
+                  }
                 >
                   Refresh
                 </button>
               </div>
             ) : (
-              reports.map((report) => {
-                const status =
-                  municipalStatus[report.id] ||
-                  "Pending";
+              reports.map(
+                (report) => {
+                  const status =
+                    municipalStatus[
+                      report.id
+                    ] ||
+                    "Pending";
 
-                return (
-                  <div
-                    key={report.id}
-                    style={{
-                      background: "#fff",
-                      borderRadius: "18px",
-                      padding: "24px",
-                      boxShadow:
-                        "0 5px 20px rgba(0,0,0,.05)"
-                    }}
-                  >
+                  return (
                     <div
+                      key={
+                        report.id
+                      }
                       style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        gap: "15px",
-                        flexWrap: "wrap"
+                        background:
+                          "#fff",
+
+                        borderRadius:
+                          "18px",
+
+                        padding:
+                          "24px",
+
+                        boxShadow:
+                          "0 5px 20px rgba(0,0,0,.05)"
                       }}
                     >
-                      <div>
-                        <span
-                          style={{
-                            fontSize: "12px",
-                            fontWeight: "700",
-                            color: "#16834f"
-                          }}
-                        >
-                          REPORT #{report.id}
-                        </span>
+                      <div
+                        style={{
+                          display:
+                            "flex",
 
-                        <h3>
-                          ♻️ {report.type}
-                        </h3>
+                          justifyContent:
+                            "space-between",
 
-                        <p>
-                          <strong>
-                            📍 Location:
-                          </strong>{" "}
-                          {report.location}
-                        </p>
+                          gap:
+                            "15px",
 
-                        <p>
-                          <strong>
-                            Severity:
-                          </strong>{" "}
-                          {report.severity}
-                        </p>
+                          flexWrap:
+                            "wrap"
+                        }}
+                      >
+                        <div>
+                          <span
+                            style={{
+                              fontSize:
+                                "12px",
 
-                        <p>
-                          <strong>
-                            Recovery:
-                          </strong>{" "}
-                          {report.recovery}
-                        </p>
+                              fontWeight:
+                                "700",
+
+                              color:
+                                "#16834f"
+                            }}
+                          >
+                            REPORT #
+                            {report.id}
+                          </span>
+
+                          <h3>
+                            ♻️{" "}
+                            {
+                              report.type
+                            }
+                          </h3>
+
+                          <p>
+                            <strong>
+                              📍 Location:
+                            </strong>{" "}
+                            {
+                              report.location
+                            }
+                          </p>
+
+                          <p>
+                            <strong>
+                              Severity:
+                            </strong>{" "}
+                            {
+                              report.severity
+                            }
+                          </p>
+
+                          <p>
+                            <strong>
+                              Recovery:
+                            </strong>{" "}
+                            {
+                              report.recovery
+                            }
+                          </p>
+                        </div>
+
+                        <StatusBadge
+                          status={
+                            status
+                          }
+                        />
                       </div>
 
-                      <StatusBadge status={status} />
-                    </div>
+                      <div
+                        style={{
+                          display:
+                            "flex",
 
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "10px",
-                        flexWrap: "wrap",
-                        marginTop: "18px"
-                      }}
-                    >
-                      {status === "Pending" && (
-                        <button
-                          className="primary-btn"
-                          onClick={() =>
-                            updateMunicipalStatus(
-                              report.id,
-                              "In Progress"
-                            )
-                          }
-                        >
-                          📍 Accept & Start Work
-                        </button>
-                      )}
+                          gap:
+                            "10px",
 
-                      {status === "In Progress" && (
-                        <>
+                          flexWrap:
+                            "wrap",
+
+                          marginTop:
+                            "18px"
+                        }}
+                      >
+                        {status ===
+                          "Pending" && (
                           <button
                             className="primary-btn"
                             onClick={() =>
                               updateMunicipalStatus(
                                 report.id,
-                                "Completed"
+                                "In Progress"
                               )
                             }
                           >
-                            ✓ Mark Completed
+                            📍 Accept & Start Work
                           </button>
+                        )}
 
-                          <button
-                            className="secondary-btn"
-                            onClick={() =>
-                              alert(
-                                "Photo evidence upload is Coming Soon."
-                              )
-                            }
-                          >
-                            📸 Evidence
-                          </button>
-                        </>
-                      )}
+                        {status ===
+                          "In Progress" && (
+                          <>
+                            <button
+                              className="primary-btn"
+                              onClick={() =>
+                                updateMunicipalStatus(
+                                  report.id,
+                                  "Completed"
+                                )
+                              }
+                            >
+                              ✓ Mark Completed
+                            </button>
 
-                      {status === "Completed" && (
-                        <>
-                          <span
-                            style={{
-                              color: "#16834f",
-                              fontWeight: "700"
-                            }}
-                          >
-                            ✓ Work completed
-                          </span>
+                            <button
+                              className="secondary-btn"
+                              onClick={() =>
+                                alert(
+                                  "Photo evidence upload is Coming Soon."
+                                )
+                              }
+                            >
+                              📸 Evidence
+                            </button>
+                          </>
+                        )}
 
-                          <button
-                            className="secondary-btn"
-                            onClick={() =>
-                              alert(
-                                "GPS arrival verification is Coming Soon."
-                              )
-                            }
-                          >
-                            GPS Verification
-                          </button>
-                        </>
-                      )}
+                        {status ===
+                          "Completed" && (
+                          <>
+                            <span
+                              style={{
+                                color:
+                                  "#16834f",
+
+                                fontWeight:
+                                  "700"
+                              }}
+                            >
+                              ✓ Work completed
+                            </span>
+
+                            <button
+                              className="secondary-btn"
+                              onClick={() =>
+                                alert(
+                                  "GPS arrival verification is Coming Soon."
+                                )
+                              }
+                            >
+                              GPS Verification
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })
+                  );
+                }
+              )
             )}
           </div>
 
           <div
             style={{
-              marginTop: "30px",
-              padding: "20px",
-              borderRadius: "16px",
-              background: "#edf7f0",
-              color: "#345344"
+              marginTop:
+                "30px",
+
+              padding:
+                "20px",
+
+              borderRadius:
+                "16px",
+
+              background:
+                "#edf7f0",
+
+              color:
+                "#345344"
             }}
           >
-            <strong>🚧 Coming Soon</strong>
+            <strong>
+              🚧 Coming Soon
+            </strong>
 
-            <p style={{ marginBottom: 0 }}>
+            <p
+              style={{
+                marginBottom:
+                  0
+              }}
+            >
               Secure worker assignment, GPS arrival verification,
               photo evidence upload and persistent municipal
               workflow will be connected to the production backend.
@@ -1407,36 +2358,65 @@ function App() {
     );
   }
 
-  /* ================= CITIZEN APP ================= */
+  /* =======================================================
+     CITIZEN APP
+     ======================================================= */
 
   return (
     <div className="app">
 
-      {/* NAV */}
+      {/* NAVBAR */}
 
       <nav className="navbar">
         <div
           className="logo"
-          onClick={() => navigate("home")}
-          style={{ cursor: "pointer" }}
+          onClick={() =>
+            navigate("home")
+          }
+          style={{
+            cursor:
+              "pointer"
+          }}
         >
           🌱 WasteFlow
         </div>
 
         <div className="nav-links">
-          <button onClick={() => navigate("home")}>
+          <button
+            onClick={() =>
+              navigate("home")
+            }
+          >
             Home
           </button>
 
-          <button onClick={() => navigate("missions")}>
+          <button
+            onClick={() =>
+              navigate(
+                "missions"
+              )
+            }
+          >
             Missions
           </button>
 
-          <button onClick={() => navigate("leaderboard")}>
+          <button
+            onClick={() =>
+              navigate(
+                "leaderboard"
+              )
+            }
+          >
             Leaderboard
           </button>
 
-          <button onClick={() => navigate("passport")}>
+          <button
+            onClick={() =>
+              navigate(
+                "passport"
+              )
+            }
+          >
             Passport
           </button>
 
@@ -1445,15 +2425,30 @@ function App() {
           </span>
 
           <button
-            onClick={handleLogout}
+            onClick={
+              handleLogout
+            }
             style={{
-              border: "1px solid #d6e3da",
-              background: "#fff",
-              color: "#24533c",
-              padding: "8px 12px",
-              borderRadius: "9px",
-              cursor: "pointer",
-              fontWeight: "600"
+              border:
+                "1px solid #d6e3da",
+
+              background:
+                "#fff",
+
+              color:
+                "#24533c",
+
+              padding:
+                "8px 12px",
+
+              borderRadius:
+                "9px",
+
+              cursor:
+                "pointer",
+
+              fontWeight:
+                "600"
             }}
           >
             Sign Out
@@ -1465,42 +2460,73 @@ function App() {
 
       <div
         style={{
-          padding: "10px 6%",
-          background: "#eef8f1",
-          display: "flex",
-          justifyContent: "flex-end",
-          alignItems: "center",
-          gap: "10px",
-          fontSize: "13px",
-          color: "#416153"
+          padding:
+            "10px 6%",
+
+          background:
+            "#eef8f1",
+
+          display:
+            "flex",
+
+          justifyContent:
+            "flex-end",
+
+          alignItems:
+            "center",
+
+          gap:
+            "10px",
+
+          fontSize:
+            "13px",
+
+          color:
+            "#416153"
         }}
       >
         {user.photoURL && (
           <img
-            src={user.photoURL}
+            src={
+              user.photoURL
+            }
             alt="Profile"
             style={{
-              width: "30px",
-              height: "30px",
-              borderRadius: "50%"
+              width:
+                "30px",
+
+              height:
+                "30px",
+
+              borderRadius:
+                "50%"
             }}
           />
         )}
 
         <span>
-          {user.displayName || "WasteFlow User"}
+          {user.displayName ||
+            "WasteFlow User"}
         </span>
 
         <span>•</span>
 
-        <span>{user.email}</span>
+        <span>
+          {user.email}
+        </span>
       </div>
 
-      {/* HOME */}
+      {/* ===================================================
+          HOME
+          =================================================== */}
 
-      {activePage === "home" && (
+      {activePage ===
+        "home" && (
         <>
-          <section className="hero" id="home">
+          <section
+            className="hero"
+            id="home"
+          >
             <div className="hero-content">
               <p className="eyebrow">
                 AI-POWERED WASTE MANAGEMENT
@@ -1508,7 +2534,10 @@ function App() {
 
               <h1>
                 Turn Waste Into
-                <span>{" "}Positive Action.</span>
+                <span>
+                  {" "}
+                  Positive Action.
+                </span>
               </h1>
 
               <p className="hero-text">
@@ -1519,14 +2548,20 @@ function App() {
               <div className="hero-buttons">
                 <button
                   className="primary-btn"
-                  onClick={openReport}
+                  onClick={
+                    openReport
+                  }
                 >
                   📷 Report Waste
                 </button>
 
                 <button
                   className="secondary-btn"
-                  onClick={() => navigate("missions")}
+                  onClick={() =>
+                    navigate(
+                      "missions"
+                    )
+                  }
                 >
                   🌱 Green Missions
                 </button>
@@ -1534,18 +2569,39 @@ function App() {
 
               <div className="hero-stats">
                 <div>
-                  <strong>{reports.length}</strong>
-                  <span>Waste Reports</span>
+                  <strong>
+                    {
+                      reports.length
+                    }
+                  </strong>
+
+                  <span>
+                    Waste Reports
+                  </span>
                 </div>
 
                 <div>
-                  <strong>{completedMissions}</strong>
-                  <span>Missions</span>
+                  <strong>
+                    {
+                      completedMissions
+                    }
+                  </strong>
+
+                  <span>
+                    Missions
+                  </span>
                 </div>
 
                 <div>
-                  <strong>{greenPoints}</strong>
-                  <span>Green Points</span>
+                  <strong>
+                    {
+                      greenPoints
+                    }
+                  </strong>
+
+                  <span>
+                    Green Points
+                  </span>
                 </div>
               </div>
             </div>
@@ -1553,8 +2609,13 @@ function App() {
 
           <section className="features">
             <div className="section-heading">
-              <p className="eyebrow">YOUR WASTEFLOW</p>
-              <h2>Environmental Action Hub</h2>
+              <p className="eyebrow">
+                YOUR WASTEFLOW
+              </p>
+
+              <h2>
+                Environmental Action Hub
+              </h2>
             </div>
 
             <div className="features-grid">
@@ -1563,7 +2624,9 @@ function App() {
                 title="Report Waste"
                 text="Use AI to identify waste and send a report."
                 button="Report"
-                onClick={openReport}
+                onClick={
+                  openReport
+                }
               />
 
               <ActionCard
@@ -1571,7 +2634,9 @@ function App() {
                 title="Clean Near Me"
                 text="Find cleanup locations on the in-app map."
                 button="Open Map"
-                onClick={openMap}
+                onClick={
+                  openMap
+                }
               />
 
               <ActionCard
@@ -1579,76 +2644,121 @@ function App() {
                 title="Green Missions"
                 text="Complete verified actions and earn Green Points."
                 button="Explore"
-                onClick={() => navigate("missions")}
+                onClick={() =>
+                  navigate(
+                    "missions"
+                  )
+                }
               />
             </div>
           </section>
 
           <section className="community-reports">
             <div className="section-heading">
-              <p className="eyebrow">COMMUNITY DATA</p>
-              <h2>Recent Waste Reports</h2>
+              <p className="eyebrow">
+                COMMUNITY DATA
+              </p>
+
+              <h2>
+                Recent Waste Reports
+              </h2>
             </div>
 
             <button
               className="primary-btn"
-              onClick={loadReports}
-              disabled={loadingReports}
+              onClick={
+                loadReports
+              }
+              disabled={
+                loadingReports
+              }
             >
               {loadingReports
                 ? "Refreshing..."
                 : "Refresh Reports"}
             </button>
 
-            {reports.length === 0 ? (
+            {reports.length ===
+            0 ? (
               <div className="no-reports">
                 No waste reports yet.
               </div>
             ) : (
               <div className="reports-grid">
-                {reports.slice(0, 6).map((report) => (
-                  <div
-                    className="report-card"
-                    key={report.id}
-                  >
-                    <span className="eyebrow">
-                      REPORT #{report.id}
-                    </span>
+                {reports
+                  .slice(0, 6)
+                  .map(
+                    (report) => (
+                      <div
+                        className="report-card"
+                        key={
+                          report.id
+                        }
+                      >
+                        <span className="eyebrow">
+                          REPORT #
+                          {
+                            report.id
+                          }
+                        </span>
 
-                    <h3>
-                      ♻️ {report.type}
-                    </h3>
+                        <h3>
+                          ♻️{" "}
+                          {
+                            report.type
+                          }
+                        </h3>
 
-                    <p>
-                      <strong>Severity:</strong>{" "}
-                      {report.severity}
-                    </p>
+                        <p>
+                          <strong>
+                            Severity:
+                          </strong>{" "}
+                          {
+                            report.severity
+                          }
+                        </p>
 
-                    <p>
-                      <strong>Recovery:</strong>{" "}
-                      {report.recovery}
-                    </p>
+                        <p>
+                          <strong>
+                            Recovery:
+                          </strong>{" "}
+                          {
+                            report.recovery
+                          }
+                        </p>
 
-                    <p>
-                      <strong>📍</strong>{" "}
-                      {report.location}
-                    </p>
-                  </div>
-                ))}
+                        <p>
+                          <strong>
+                            📍
+                          </strong>{" "}
+                          {
+                            report.location
+                          }
+                        </p>
+                      </div>
+                    )
+                  )}
               </div>
             )}
           </section>
         </>
       )}
 
-      {/* MISSIONS */}
+      {/* ===================================================
+          MISSIONS
+          =================================================== */}
 
-      {activePage === "missions" && (
+      {activePage ===
+        "missions" && (
         <section className="missions">
           <div className="section-heading">
-            <p className="eyebrow">GREEN PASSPORT</p>
+            <p className="eyebrow">
+              GREEN PASSPORT
+            </p>
 
-            <h2>Verified Environmental Missions</h2>
+            <h2>
+              Verified Environmental Missions
+            </h2>
 
             <p>
               Complete real-world actions and build your
@@ -1658,14 +2768,24 @@ function App() {
 
           <div className="green-passport-header">
             <div>
-              <span>GREEN POINTS</span>
-              <strong>{greenPoints}</strong>
-              <small>points</small>
+              <span>
+                GREEN POINTS
+              </span>
+
+              <strong>
+                {greenPoints}
+              </strong>
+
+              <small>
+                points
+              </small>
             </div>
 
             <div className="passport-badge">
               🌱
-              <span>Eco Explorer</span>
+              <span>
+                Eco Explorer
+              </span>
             </div>
           </div>
 
@@ -1676,7 +2796,9 @@ function App() {
               description="AI-assisted waste classification and community reporting."
               tag="+10 POINTS"
               button="Start"
-              onClick={openReport}
+              onClick={
+                openReport
+              }
             />
 
             <MissionCard
@@ -1685,7 +2807,9 @@ function App() {
               description="Reach a cleanup location and submit BEFORE + AFTER evidence."
               tag="EVIDENCE REQUIRED"
               button="Open Map"
-              onClick={openMap}
+              onClick={
+                openMap
+              }
             />
 
             <MissionCard
@@ -1699,7 +2823,9 @@ function App() {
                   : "Start"
               }
               featured
-              onClick={openPlantation}
+              onClick={
+                openPlantation
+              }
             />
 
             <MissionCard
@@ -1708,7 +2834,11 @@ function App() {
               description="Compare your verified environmental points with the community."
               tag="COMPETITION"
               button="View"
-              onClick={() => navigate("leaderboard")}
+              onClick={() =>
+                navigate(
+                  "leaderboard"
+                )
+              }
             />
           </div>
 
@@ -1718,7 +2848,9 @@ function App() {
                 PLANTATION JOURNEY
               </p>
 
-              <h2>100-Day Verification</h2>
+              <h2>
+                100-Day Verification
+              </h2>
             </div>
 
             <div className="timeline">
@@ -1726,7 +2858,9 @@ function App() {
                 icon="🌱"
                 day="Day 0"
                 label="Plant"
-                active={plantationStarted}
+                active={
+                  plantationStarted
+                }
               />
 
               <div className="timeline-line" />
@@ -1735,7 +2869,10 @@ function App() {
                 icon="📸"
                 day="Day 7"
                 label="Progress"
-                active={plantationDay >= 7}
+                active={
+                  plantationDay >=
+                  7
+                }
               />
 
               <div className="timeline-line" />
@@ -1744,7 +2881,10 @@ function App() {
                 icon="🌿"
                 day="Day 30"
                 label="Growth"
-                active={plantationDay >= 30}
+                active={
+                  plantationDay >=
+                  30
+                }
               />
 
               <div className="timeline-line" />
@@ -1753,7 +2893,10 @@ function App() {
                 icon="🌳"
                 day="Day 60"
                 label="Growth"
-                active={plantationDay >= 60}
+                active={
+                  plantationDay >=
+                  60
+                }
               />
 
               <div className="timeline-line" />
@@ -1763,23 +2906,31 @@ function App() {
                 day="Day 100"
                 label="Certificate"
                 premium
-                active={plantationDay >= 100}
+                active={
+                  plantationDay >=
+                  100
+                }
               />
             </div>
           </div>
         </section>
       )}
 
-      {/* LEADERBOARD */}
+      {/* ===================================================
+          LEADERBOARD
+          =================================================== */}
 
-      {activePage === "leaderboard" && (
+      {activePage ===
+        "leaderboard" && (
         <section className="missions">
           <div className="section-heading">
             <p className="eyebrow">
               COMMUNITY IMPACT
             </p>
 
-            <h2>Green Leaderboard</h2>
+            <h2>
+              Green Leaderboard
+            </h2>
 
             <p>
               Your ranking is based on your WasteFlow Green Points.
@@ -1788,77 +2939,151 @@ function App() {
 
           <div
             style={{
-              maxWidth: "700px",
-              margin: "0 auto",
-              display: "grid",
-              gap: "12px"
+              maxWidth:
+                "700px",
+
+              margin:
+                "0 auto",
+
+              display:
+                "grid",
+
+              gap:
+                "12px"
             }}
           >
-            {currentLeaderboard.map((entry, index) => (
-              <div
-                key={`${entry.name}-${index}`}
-                style={{
-                  background: "#fff",
-                  borderRadius: "18px",
-                  padding: "18px 20px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  border: entry.currentUser
-                    ? "2px solid #16834f"
-                    : "1px solid #e2eae5"
-                }}
-              >
+            {currentLeaderboard.map(
+              (
+                entry,
+                index
+              ) => (
                 <div
+                  key={`${entry.name}-${index}`}
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "15px"
+                    background:
+                      "#fff",
+
+                    borderRadius:
+                      "18px",
+
+                    padding:
+                      "18px 20px",
+
+                    display:
+                      "flex",
+
+                    alignItems:
+                      "center",
+
+                    justifyContent:
+                      "space-between",
+
+                    border:
+                      entry.currentUser
+                        ? "2px solid #16834f"
+                        : "1px solid #e2eae5"
                   }}
                 >
-                  <strong style={{ width: "30px" }}>
-                    #{index + 1}
-                  </strong>
-
                   <div
                     style={{
-                      width: "42px",
-                      height: "42px",
-                      borderRadius: "50%",
-                      background: "#e8f6ed",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center"
+                      display:
+                        "flex",
+
+                      alignItems:
+                        "center",
+
+                      gap:
+                        "15px"
                     }}
                   >
-                    {entry.currentUser ? "🌱" : "🏅"}
+                    <strong
+                      style={{
+                        width:
+                          "30px"
+                      }}
+                    >
+                      #
+                      {index +
+                        1}
+                    </strong>
+
+                    <div
+                      style={{
+                        width:
+                          "42px",
+
+                        height:
+                          "42px",
+
+                        borderRadius:
+                          "50%",
+
+                        background:
+                          "#e8f6ed",
+
+                        display:
+                          "flex",
+
+                        alignItems:
+                          "center",
+
+                        justifyContent:
+                          "center"
+                      }}
+                    >
+                      {entry.currentUser
+                        ? "🌱"
+                        : "🏅"}
+                    </div>
+
+                    <strong>
+                      {
+                        entry.name
+                      }
+
+                      {entry.currentUser
+                        ? " (You)"
+                        : ""}
+                    </strong>
                   </div>
 
-                  <strong>
-                    {entry.name}
-                    {entry.currentUser
-                      ? " (You)"
-                      : ""}
+                  <strong
+                    style={{
+                      color:
+                        "#16834f"
+                    }}
+                  >
+                    {
+                      entry.points
+                    }{" "}
+                    pts
                   </strong>
                 </div>
-
-                <strong style={{ color: "#16834f" }}>
-                  {entry.points} pts
-                </strong>
-              </div>
-            ))}
+              )
+            )}
           </div>
 
           <div
             style={{
-              maxWidth: "700px",
-              margin: "25px auto 0",
-              padding: "20px",
-              background: "#edf7f0",
-              borderRadius: "16px"
+              maxWidth:
+                "700px",
+
+              margin:
+                "25px auto 0",
+
+              padding:
+                "20px",
+
+              background:
+                "#edf7f0",
+
+              borderRadius:
+                "16px"
             }}
           >
-            <strong>🚧 Demo leaderboard</strong>
+            <strong>
+              🚧 Demo leaderboard
+            </strong>
 
             <p>
               Community ranking will become fully backend-powered
@@ -1868,14 +3093,21 @@ function App() {
         </section>
       )}
 
-      {/* PASSPORT */}
+      {/* ===================================================
+          PASSPORT
+          =================================================== */}
 
-      {activePage === "passport" && (
+      {activePage ===
+        "passport" && (
         <section className="missions">
           <div className="section-heading">
-            <p className="eyebrow">YOUR ACCOUNT</p>
+            <p className="eyebrow">
+              YOUR ACCOUNT
+            </p>
 
-            <h2>Green Passport</h2>
+            <h2>
+              Green Passport
+            </h2>
 
             <p>
               Your environmental identity and verified action history.
@@ -1884,36 +3116,62 @@ function App() {
 
           <div
             style={{
-              maxWidth: "850px",
-              margin: "0 auto"
+              maxWidth:
+                "850px",
+
+              margin:
+                "0 auto"
             }}
           >
             <div
               style={{
                 background:
                   "linear-gradient(135deg,#123b2a,#16834f)",
-                color: "#fff",
-                borderRadius: "25px",
-                padding: "30px",
-                marginBottom: "18px"
+
+                color:
+                  "#fff",
+
+                borderRadius:
+                  "25px",
+
+                padding:
+                  "30px",
+
+                marginBottom:
+                  "18px"
               }}
             >
               <div
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "18px",
-                  flexWrap: "wrap"
+                  display:
+                    "flex",
+
+                  alignItems:
+                    "center",
+
+                  gap:
+                    "18px",
+
+                  flexWrap:
+                    "wrap"
                 }}
               >
                 {user.photoURL ? (
                   <img
-                    src={user.photoURL}
+                    src={
+                      user.photoURL
+                    }
                     alt="Profile"
                     style={{
-                      width: "70px",
-                      height: "70px",
-                      borderRadius: "50%",
+                      width:
+                        "70px",
+
+                      height:
+                        "70px",
+
+                      borderRadius:
+                        "50%",
+
                       border:
                         "3px solid rgba(255,255,255,.5)"
                     }}
@@ -1921,15 +3179,29 @@ function App() {
                 ) : (
                   <div
                     style={{
-                      width: "70px",
-                      height: "70px",
-                      borderRadius: "50%",
+                      width:
+                        "70px",
+
+                      height:
+                        "70px",
+
+                      borderRadius:
+                        "50%",
+
                       background:
                         "rgba(255,255,255,.15)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "32px"
+
+                      display:
+                        "flex",
+
+                      alignItems:
+                        "center",
+
+                      justifyContent:
+                        "center",
+
+                      fontSize:
+                        "32px"
                     }}
                   >
                     🌱
@@ -1939,95 +3211,143 @@ function App() {
                 <div>
                   <span
                     style={{
-                      opacity: 0.75,
-                      fontSize: "12px"
+                      opacity:
+                        0.75,
+
+                      fontSize:
+                        "12px"
                     }}
                   >
                     GREEN PASSPORT HOLDER
                   </span>
 
-                  <h2 style={{ margin: "5px 0" }}>
+                  <h2
+                    style={{
+                      margin:
+                        "5px 0"
+                    }}
+                  >
                     {user.displayName ||
                       "WasteFlow User"}
                   </h2>
 
-                  <span style={{ opacity: 0.8 }}>
-                    {user.email}
+                  <span
+                    style={{
+                      opacity:
+                        0.8
+                    }}
+                  >
+                    {
+                      user.email
+                    }
                   </span>
                 </div>
               </div>
 
               <div
                 style={{
-                  display: "grid",
+                  display:
+                    "grid",
+
                   gridTemplateColumns:
                     "repeat(3,1fr)",
-                  gap: "10px",
-                  marginTop: "28px"
+
+                  gap:
+                    "10px",
+
+                  marginTop:
+                    "28px"
                 }}
               >
                 <PassportStat
-                  value={greenPoints}
+                  value={
+                    greenPoints
+                  }
                   label="Points"
                 />
 
                 <PassportStat
-                  value={cleanupCompleted}
+                  value={
+                    cleanupCompleted
+                  }
                   label="Cleanups"
                 />
 
                 <PassportStat
-                  value={completedMissions}
+                  value={
+                    completedMissions
+                  }
                   label="Missions"
                 />
               </div>
             </div>
 
             <div className="passport-card">
-              <h3>🏅 Achievements</h3>
+              <h3>
+                🏅 Achievements
+              </h3>
 
-              {achievements.length === 0 ? (
+              {achievements.length ===
+              0 ? (
                 <div
                   style={{
-                    padding: "25px 0",
-                    color: "#66756d"
+                    padding:
+                      "25px 0",
+
+                    color:
+                      "#66756d"
                   }}
                 >
                   Complete your first verified action to
                   unlock an achievement.
                 </div>
               ) : (
-                achievements.map((achievement) => (
-                  <div
-                    key={achievement}
-                    className="mission-item"
-                  >
-                    <div className="mission-icon">
-                      🏆
+                achievements.map(
+                  (
+                    achievement
+                  ) => (
+                    <div
+                      key={
+                        achievement
+                      }
+                      className="mission-item"
+                    >
+                      <div className="mission-icon">
+                        🏆
+                      </div>
+
+                      <div className="mission-info">
+                        <h3>
+                          {
+                            achievement
+                          }
+                        </h3>
+
+                        <p>
+                          Added to your WasteFlow environmental
+                          record.
+                        </p>
+                      </div>
+
+                      <span className="mission-tag">
+                        VERIFIED
+                      </span>
                     </div>
-
-                    <div className="mission-info">
-                      <h3>{achievement}</h3>
-
-                      <p>
-                        Added to your WasteFlow environmental
-                        record.
-                      </p>
-                    </div>
-
-                    <span className="mission-tag">
-                      VERIFIED
-                    </span>
-                  </div>
-                ))
+                  )
+                )
               )}
             </div>
 
             <div
               className="passport-card"
-              style={{ marginTop: "18px" }}
+              style={{
+                marginTop:
+                  "18px"
+              }}
             >
-              <h3>🌳 Plantation</h3>
+              <h3>
+                🌳 Plantation
+              </h3>
 
               <p>
                 Status:{" "}
@@ -2040,7 +3360,11 @@ function App() {
 
               <p>
                 Evidence Day:{" "}
-                <strong>{plantationDay}</strong>
+                <strong>
+                  {
+                    plantationDay
+                  }
+                </strong>
               </p>
 
               <p>
@@ -2054,7 +3378,9 @@ function App() {
 
               <button
                 className="primary-btn"
-                onClick={openPlantation}
+                onClick={
+                  openPlantation
+                }
               >
                 {plantationStarted
                   ? "View Mission"
@@ -2064,21 +3390,37 @@ function App() {
 
             <div
               className="passport-card"
-              style={{ marginTop: "18px" }}
+              style={{
+                marginTop:
+                  "18px"
+              }}
             >
-              <h3>🏆 Certificates</h3>
+              <h3>
+                🏆 Certificates
+              </h3>
 
               {certificateUnlocked ? (
                 <div
                   style={{
-                    padding: "25px",
+                    padding:
+                      "25px",
+
                     border:
                       "2px solid #16834f",
-                    borderRadius: "18px",
-                    textAlign: "center"
+
+                    borderRadius:
+                      "18px",
+
+                    textAlign:
+                      "center"
                   }}
                 >
-                  <div style={{ fontSize: "45px" }}>
+                  <div
+                    style={{
+                      fontSize:
+                        "45px"
+                    }}
+                  >
                     🏆
                   </div>
 
@@ -2104,9 +3446,14 @@ function App() {
               ) : (
                 <div
                   style={{
-                    padding: "25px",
-                    background: "#f4f7f5",
-                    borderRadius: "18px"
+                    padding:
+                      "25px",
+
+                    background:
+                      "#f4f7f5",
+
+                    borderRadius:
+                      "18px"
                   }}
                 >
                   🔒 Your certificate will unlock after the
@@ -2118,7 +3465,9 @@ function App() {
         </section>
       )}
 
-      {/* CTA */}
+      {/* ===================================================
+          CTA
+          =================================================== */}
 
       <section className="cta">
         <h2>
@@ -2136,26 +3485,34 @@ function App() {
 
         <button
           className="primary-btn"
-          onClick={openReport}
+          onClick={
+            openReport
+          }
         >
           Report Waste
         </button>
       </section>
 
-      {/* MAP */}
+      {/* ===================================================
+          MAP
+          =================================================== */}
 
       {showMap && (
         <div className="map-screen">
           <div className="map-header">
             <button
               className="map-back"
-              onClick={closeMap}
+              onClick={
+                closeMap
+              }
             >
               ←
             </button>
 
             <div>
-              <strong>Cleanup Map</strong>
+              <strong>
+                Cleanup Map
+              </strong>
 
               <span>
                 Find cleanup locations inside WasteFlow
@@ -2165,7 +3522,8 @@ function App() {
 
           <MapContainer
             center={
-              userLocation || DEFAULT_CENTER
+              userLocation ||
+              DEFAULT_CENTER
             }
             zoom={14}
             className="wasteflow-map"
@@ -2178,77 +3536,120 @@ function App() {
 
             <MapController
               center={
-                userLocation || DEFAULT_CENTER
+                userLocation ||
+                DEFAULT_CENTER
               }
               zoom={14}
             />
 
             {userLocation && (
               <CircleMarker
-                center={userLocation}
+                center={
+                  userLocation
+                }
                 radius={9}
                 pathOptions={{
-                  color: "#fff",
-                  fillColor: "#2878ff",
-                  fillOpacity: 1,
-                  weight: 3
-                }}
-              >
-                <Popup>
-                  <strong>You are here</strong>
-                </Popup>
-              </CircleMarker>
-            )}
+                  color:
+                    "#fff",
 
-            {cleanupLocations.map((cleanup) => (
-              <CircleMarker
-                key={cleanup.id}
-                center={[
-                  cleanup.lat,
-                  cleanup.lng
-                ]}
-                radius={
-                  selectedCleanup?.id === cleanup.id
-                    ? 13
-                    : 10
-                }
-                pathOptions={{
-                  color: "#fff",
                   fillColor:
-                    selectedCleanup?.id === cleanup.id
-                      ? "#0f7a48"
-                      : "#2eaa60",
-                  fillOpacity: 1,
-                  weight: 3
-                }}
-                eventHandlers={{
-                  click: () =>
-                    selectCleanup(cleanup)
+                    "#2878ff",
+
+                  fillOpacity:
+                    1,
+
+                  weight:
+                    3
                 }}
               >
                 <Popup>
                   <strong>
-                    {cleanup.title}
+                    You are here
                   </strong>
-
-                  <br />
-
-                  {cleanup.location}
-
-                  <br />
-
-                  👥 {cleanup.volunteers} volunteers
                 </Popup>
               </CircleMarker>
-            ))}
+            )}
 
-            {routeCoordinates.length > 0 && (
+            {cleanupLocations.map(
+              (cleanup) => (
+                <CircleMarker
+                  key={
+                    cleanup.id
+                  }
+                  center={[
+                    cleanup.lat,
+                    cleanup.lng
+                  ]}
+                  radius={
+                    selectedCleanup?.id ===
+                    cleanup.id
+                      ? 13
+                      : 10
+                  }
+                  pathOptions={{
+                    color:
+                      "#fff",
+
+                    fillColor:
+                      selectedCleanup?.id ===
+                      cleanup.id
+                        ? "#0f7a48"
+                        : "#2eaa60",
+
+                    fillOpacity:
+                      1,
+
+                    weight:
+                      3
+                  }}
+                  eventHandlers={{
+                    click:
+                      () =>
+                        selectCleanup(
+                          cleanup
+                        )
+                  }}
+                >
+                  <Popup>
+                    <strong>
+                      {
+                        cleanup.title
+                      }
+                    </strong>
+
+                    <br />
+
+                    {
+                      cleanup.location
+                    }
+
+                    <br />
+
+                    👥{" "}
+                    {
+                      cleanup.volunteers
+                    }{" "}
+                    volunteers
+                  </Popup>
+                </CircleMarker>
+              )
+            )}
+
+            {routeCoordinates.length >
+              0 && (
               <Polyline
-                positions={routeCoordinates}
+                positions={
+                  routeCoordinates
+                }
                 pathOptions={{
-                  color: "#16834f",
-                  weight: 5,
-                  opacity: 0.8
+                  color:
+                    "#16834f",
+
+                  weight:
+                    5,
+
+                  opacity:
+                    0.8
                 }}
               />
             )}
@@ -2257,13 +3658,17 @@ function App() {
           <div className="map-bottom-panel">
             {mapMessage && (
               <div className="map-route-info">
-                {mapMessage}
+                {
+                  mapMessage
+                }
               </div>
             )}
 
             {!selectedCleanup ? (
               <div className="map-empty-state">
-                <div>📍</div>
+                <div>
+                  📍
+                </div>
 
                 <strong>
                   Select a cleanup location
@@ -2275,7 +3680,9 @@ function App() {
 
                 <button
                   className="secondary-btn"
-                  onClick={getUserLocation}
+                  onClick={
+                    getUserLocation
+                  }
                 >
                   📍 Locate Me
                 </button>
@@ -2289,30 +3696,45 @@ function App() {
 
                   <div>
                     <h3>
-                      {selectedCleanup.title}
+                      {
+                        selectedCleanup.title
+                      }
                     </h3>
 
                     <p>
-                      {selectedCleanup.location}
+                      {
+                        selectedCleanup.location
+                      }
                     </p>
                   </div>
                 </div>
 
                 <div className="map-cleanup-stats">
                   <span>
-                    🗑️ {selectedCleanup.waste}
+                    🗑️{" "}
+                    {
+                      selectedCleanup.waste
+                    }
                   </span>
 
                   <span>
-                    👥 {selectedCleanup.volunteers} volunteers
+                    👥{" "}
+                    {
+                      selectedCleanup.volunteers
+                    }{" "}
+                    volunteers
                   </span>
                 </div>
 
                 <div className="map-actions">
                   <button
                     className="secondary-btn"
-                    onClick={getRoute}
-                    disabled={routeLoading}
+                    onClick={
+                      getRoute
+                    }
+                    disabled={
+                      routeLoading
+                    }
                   >
                     {routeLoading
                       ? "Finding Route..."
@@ -2322,7 +3744,9 @@ function App() {
                   <button
                     className="primary-btn"
                     onClick={() =>
-                      joinCleanup(selectedCleanup)
+                      joinCleanup(
+                        selectedCleanup
+                      )
                     }
                   >
                     Join Cleanup
@@ -2334,194 +3758,248 @@ function App() {
         </div>
       )}
 
-      {/* CLEANUP MODAL */}
+      {/* ===================================================
+          CLEANUP MODAL
+          =================================================== */}
 
-      {showCleanupMission && selectedCleanup && (
-        <div className="modal-overlay">
-          <div className="mission-modal">
-            <button
-              className="modal-close"
-              onClick={() =>
-                setShowCleanupMission(false)
-              }
-            >
-              ✕
-            </button>
-
-            <div className="mission-modal-icon">
-              🧹
-            </div>
-
-            <h2>
-              {selectedCleanup.title}
-            </h2>
-
-            <p className="modal-subtitle">
-              Complete the cleanup and submit evidence for
-              verification.
-            </p>
-
-            <div className="cleanup-location-box">
-              <span>SELECTED LOCATION</span>
-
-              <strong>
-                {selectedCleanup.location}
-              </strong>
-
+      {showCleanupMission &&
+        selectedCleanup && (
+          <div className="modal-overlay">
+            <div className="mission-modal">
               <button
-                className="secondary-btn"
-                onClick={openMap}
+                className="modal-close"
+                onClick={() =>
+                  setShowCleanupMission(
+                    false
+                  )
+                }
               >
-                🗺️ Open In-App Map
+                ✕
               </button>
-            </div>
 
-            <div className="verification-flow">
-              <div className="verification-step done">
-                <span>1</span>
-
-                <div>
-                  <strong>Cleanup Joined</strong>
-
-                  <small>
-                    No points awarded for joining.
-                  </small>
-                </div>
+              <div className="mission-modal-icon">
+                🧹
               </div>
 
-              <div className="verification-step">
-                <span>2</span>
+              <h2>
+                {
+                  selectedCleanup.title
+                }
+              </h2>
 
-                <div>
-                  <strong>BEFORE Photo</strong>
-
-                  <small>
-                    Photograph the area before cleanup.
-                  </small>
-
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleCleanupBefore}
-                  />
-
-                  {cleanupBeforePreview && (
-                    <img
-                      src={cleanupBeforePreview}
-                      className="evidence-preview"
-                      alt="Before cleanup"
-                    />
-                  )}
-                </div>
-              </div>
-
-              <div className="verification-step">
-                <span>3</span>
-
-                <div>
-                  <strong>Complete Cleanup</strong>
-
-                  <small>
-                    Clean the selected area.
-                  </small>
-                </div>
-              </div>
-
-              <div className="verification-step">
-                <span>4</span>
-
-                <div>
-                  <strong>AFTER Photo</strong>
-
-                  <small>
-                    Photograph the cleaned area.
-                  </small>
-
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleCleanupAfter}
-                  />
-
-                  {cleanupAfterPreview && (
-                    <img
-                      src={cleanupAfterPreview}
-                      className="evidence-preview"
-                      alt="After cleanup"
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="evidence-warning">
-              <strong>AI Evidence Check</strong>
-
-              <p>
-                WasteFlow will compare the submitted BEFORE and
-                AFTER evidence.
+              <p className="modal-subtitle">
+                Complete the cleanup and submit evidence for
+                verification.
               </p>
 
-              <small>
-                Current prototype does not provide forensic proof
-                that an image is original or unedited. Evidence
-                may require manual review.
-              </small>
-            </div>
+              <div className="cleanup-location-box">
+                <span>
+                  SELECTED LOCATION
+                </span>
 
-            {!cleanupVerified ? (
-              <button
-                className="submit-report-btn"
-                onClick={verifyCleanup}
-                disabled={cleanupChecking}
-              >
-                {cleanupChecking
-                  ? "Checking Evidence..."
-                  : "Submit Evidence"}
-              </button>
-            ) : (
-              <div className="verification-success">
-                <div className="success-icon">
-                  ✓
+                <strong>
+                  {
+                    selectedCleanup.location
+                  }
+                </strong>
+
+                <button
+                  className="secondary-btn"
+                  onClick={
+                    openMap
+                  }
+                >
+                  🗺️ Open In-App Map
+                </button>
+              </div>
+
+              <div className="verification-flow">
+                <div className="verification-step done">
+                  <span>
+                    1
+                  </span>
+
+                  <div>
+                    <strong>
+                      Cleanup Joined
+                    </strong>
+
+                    <small>
+                      No points awarded for joining.
+                    </small>
+                  </div>
                 </div>
 
-                <h3>Evidence Submitted</h3>
+                <div className="verification-step">
+                  <span>
+                    2
+                  </span>
+
+                  <div>
+                    <strong>
+                      BEFORE Photo
+                    </strong>
+
+                    <small>
+                      Photograph the area before cleanup.
+                    </small>
+
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={
+                        handleCleanupBefore
+                      }
+                    />
+
+                    {cleanupBeforePreview && (
+                      <img
+                        src={
+                          cleanupBeforePreview
+                        }
+                        className="evidence-preview"
+                        alt="Before cleanup"
+                      />
+                    )}
+                  </div>
+                </div>
+
+                <div className="verification-step">
+                  <span>
+                    3
+                  </span>
+
+                  <div>
+                    <strong>
+                      Complete Cleanup
+                    </strong>
+
+                    <small>
+                      Clean the selected area.
+                    </small>
+                  </div>
+                </div>
+
+                <div className="verification-step">
+                  <span>
+                    4
+                  </span>
+
+                  <div>
+                    <strong>
+                      AFTER Photo
+                    </strong>
+
+                    <small>
+                      Photograph the cleaned area.
+                    </small>
+
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={
+                        handleCleanupAfter
+                      }
+                    />
+
+                    {cleanupAfterPreview && (
+                      <img
+                        src={
+                          cleanupAfterPreview
+                        }
+                        className="evidence-preview"
+                        alt="After cleanup"
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="evidence-warning">
+                <strong>
+                  AI Evidence Check
+                </strong>
 
                 <p>
-                  Demo evidence comparison completed.
+                  WasteFlow will compare the submitted BEFORE and
+                  AFTER evidence.
                 </p>
 
-                <div className="cleanup-score">
-                  <strong>
-                    {cleanupPercent}%
-                  </strong>
-
-                  <span>
-                    Estimated Cleanup
-                  </span>
-                </div>
-
-                <div className="reward-box">
-                  🌱 +40 Green Points
-                  <br />
-                  🏅 Cleanup Achievement
-                </div>
-
-                <p
-                  style={{
-                    fontSize: "12px",
-                    color: "#66756d"
-                  }}
-                >
-                  {cleanupEvidenceStatus}
-                </p>
+                <small>
+                  Current prototype does not provide forensic proof
+                  that an image is original or unedited. Evidence
+                  may require manual review.
+                </small>
               </div>
-            )}
-          </div>
-        </div>
-      )}
 
-      {/* PLANTATION MODAL */}
+              {!cleanupVerified ? (
+                <button
+                  className="submit-report-btn"
+                  onClick={
+                    verifyCleanup
+                  }
+                  disabled={
+                    cleanupChecking
+                  }
+                >
+                  {cleanupChecking
+                    ? "Checking Evidence..."
+                    : "Submit Evidence"}
+                </button>
+              ) : (
+                <div className="verification-success">
+                  <div className="success-icon">
+                    ✓
+                  </div>
+
+                  <h3>
+                    Evidence Submitted
+                  </h3>
+
+                  <p>
+                    Demo evidence comparison completed.
+                  </p>
+
+                  <div className="cleanup-score">
+                    <strong>
+                      {
+                        cleanupPercent
+                      }%
+                    </strong>
+
+                    <span>
+                      Estimated Cleanup
+                    </span>
+                  </div>
+
+                  <div className="reward-box">
+                    🌱 +40 Green Points
+                    <br />
+                    🏅 Cleanup Achievement
+                  </div>
+
+                  <p
+                    style={{
+                      fontSize:
+                        "12px",
+
+                      color:
+                        "#66756d"
+                    }}
+                  >
+                    {
+                      cleanupEvidenceStatus
+                    }
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+      {/* ===================================================
+          PLANTATION MODAL
+          =================================================== */}
 
       {showPlantation && (
         <div className="modal-overlay">
@@ -2529,7 +4007,9 @@ function App() {
             <button
               className="modal-close"
               onClick={() =>
-                setShowPlantation(false)
+                setShowPlantation(
+                  false
+                )
               }
             >
               ✕
@@ -2539,7 +4019,9 @@ function App() {
               🌳
             </div>
 
-            <h2>Plant & Protect</h2>
+            <h2>
+              Plant & Protect
+            </h2>
 
             <p className="modal-subtitle">
               A 100-day evidence journey for your planted tree.
@@ -2550,7 +4032,9 @@ function App() {
                 icon="🌱"
                 day="Day 0"
                 label="Plant"
-                active={plantationStarted}
+                active={
+                  plantationStarted
+                }
               />
 
               <div className="plant-line" />
@@ -2559,7 +4043,10 @@ function App() {
                 icon="📸"
                 day="Day 7"
                 label="Progress"
-                active={plantationDay >= 7}
+                active={
+                  plantationDay >=
+                  7
+                }
               />
 
               <div className="plant-line" />
@@ -2568,7 +4055,10 @@ function App() {
                 icon="🌿"
                 day="Day 30"
                 label="Growth"
-                active={plantationDay >= 30}
+                active={
+                  plantationDay >=
+                  30
+                }
               />
 
               <div className="plant-line" />
@@ -2577,7 +4067,10 @@ function App() {
                 icon="🌳"
                 day="Day 60"
                 label="Growth"
-                active={plantationDay >= 60}
+                active={
+                  plantationDay >=
+                  60
+                }
               />
 
               <div className="plant-line" />
@@ -2587,7 +4080,10 @@ function App() {
                 day="Day 100"
                 label="Certificate"
                 premium
-                active={plantationDay >= 100}
+                active={
+                  plantationDay >=
+                  100
+                }
               />
             </div>
 
@@ -2606,12 +4102,16 @@ function App() {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={handlePlantationPhoto}
+                    onChange={
+                      handlePlantationPhoto
+                    }
                   />
 
                   {plantationPreview && (
                     <img
-                      src={plantationPreview}
+                      src={
+                        plantationPreview
+                      }
                       className="plantation-preview-image"
                       alt="Plantation evidence"
                     />
@@ -2619,7 +4119,9 @@ function App() {
                 </div>
 
                 <div className="evidence-warning">
-                  <strong>AI Evidence Check</strong>
+                  <strong>
+                    AI Evidence Check
+                  </strong>
 
                   <p>
                     Day 0 verification is currently a prototype
@@ -2634,8 +4136,12 @@ function App() {
 
                 <button
                   className="submit-report-btn"
-                  onClick={startPlantation}
-                  disabled={plantationChecking}
+                  onClick={
+                    startPlantation
+                  }
+                  disabled={
+                    plantationChecking
+                  }
                 >
                   {plantationChecking
                     ? "Checking..."
@@ -2649,7 +4155,9 @@ function App() {
                     ✓
                   </div>
 
-                  <h3>Mission Started</h3>
+                  <h3>
+                    Mission Started
+                  </h3>
 
                   <p>
                     Day 0 evidence submitted.
@@ -2661,14 +4169,19 @@ function App() {
                 </div>
 
                 <div className="next-check">
-                  <span>NEXT CHECKPOINT</span>
+                  <span>
+                    NEXT CHECKPOINT
+                  </span>
 
                   <strong>
-                    {plantationDay < 7
+                    {plantationDay <
+                    7
                       ? "DAY 7"
-                      : plantationDay < 30
+                      : plantationDay <
+                        30
                       ? "DAY 30"
-                      : plantationDay < 60
+                      : plantationDay <
+                        60
                       ? "DAY 60"
                       : "DAY 100"}
                   </strong>
@@ -2702,7 +4215,9 @@ function App() {
                     </p>
                   </div>
 
-                  <span>🔒</span>
+                  <span>
+                    🔒
+                  </span>
                 </div>
               </div>
             )}
@@ -2710,21 +4225,27 @@ function App() {
         </div>
       )}
 
-      {/* REPORT MODAL */}
+      {/* ===================================================
+          REPORT MODAL
+          =================================================== */}
 
       {showReport && (
         <div className="modal-overlay">
           <div className="report-modal">
             <button
               className="modal-close"
-              onClick={closeReport}
+              onClick={
+                closeReport
+              }
             >
               ✕
             </button>
 
             {!submitted ? (
               <>
-                <h2>Report Waste</h2>
+                <h2>
+                  Report Waste
+                </h2>
 
                 <p>
                   Upload a photo for AI-assisted waste
@@ -2735,7 +4256,9 @@ function App() {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={handleImageUpload}
+                    onChange={
+                      handleImageUpload
+                    }
                   />
 
                   {image && (
@@ -2749,8 +4272,13 @@ function App() {
 
                 <button
                   className="primary-btn"
-                  onClick={analyzeWaste}
-                  disabled={analyzing || !imageFile}
+                  onClick={
+                    analyzeWaste
+                  }
+                  disabled={
+                    analyzing ||
+                    !imageFile
+                  }
                 >
                   {analyzing
                     ? "AI Analyzing..."
@@ -2759,48 +4287,79 @@ function App() {
 
                 {analysis && (
                   <div className="analysis-result">
-                    <h3>AI Analysis</h3>
+                    <h3>
+                      AI Analysis
+                    </h3>
 
                     <p>
-                      <strong>Type:</strong>{" "}
-                      {analysis.type}
+                      <strong>
+                        Type:
+                      </strong>{" "}
+                      {
+                        analysis.type
+                      }
                     </p>
 
                     <p>
-                      <strong>Confidence:</strong>{" "}
-                      {analysis.confidence}%
+                      <strong>
+                        Confidence:
+                      </strong>{" "}
+                      {
+                        analysis.confidence
+                      }
+                      %
                     </p>
 
                     <p>
-                      <strong>AI Prediction:</strong>{" "}
-                      {analysis.prediction}
+                      <strong>
+                        AI Prediction:
+                      </strong>{" "}
+                      {
+                        analysis.prediction
+                      }
                     </p>
 
                     <p>
-                      <strong>Severity:</strong>{" "}
-                      {analysis.severity}
+                      <strong>
+                        Severity:
+                      </strong>{" "}
+                      {
+                        analysis.severity
+                      }
                     </p>
 
                     <p>
-                      <strong>Recyclable:</strong>{" "}
-                      {analysis.recyclable}
+                      <strong>
+                        Recyclable:
+                      </strong>{" "}
+                      {
+                        analysis.recyclable
+                      }
                     </p>
 
                     <p>
-                      <strong>Recovery:</strong>{" "}
-                      {analysis.recovery}
+                      <strong>
+                        Recovery:
+                      </strong>{" "}
+                      {
+                        analysis.recovery
+                      }
                     </p>
 
                     <p>
                       <strong>
                         Recommended Action:
                       </strong>{" "}
-                      {analysis.action}
+                      {
+                        analysis.action
+                      }
                     </p>
 
                     <button
                       className="secondary-btn"
-                      onClick={getLocation}
+                      onClick={
+                        getLocation
+                      }
                     >
                       {gettingLocation
                         ? "Getting Location..."
@@ -2809,14 +4368,18 @@ function App() {
 
                     {location && (
                       <p>
-                        <strong>Location:</strong>{" "}
+                        <strong>
+                          Location:
+                        </strong>{" "}
                         {location}
                       </p>
                     )}
 
                     <button
                       className="submit-report-btn"
-                      onClick={submitReport}
+                      onClick={
+                        submitReport
+                      }
                     >
                       Submit Report +10
                     </button>
@@ -2829,22 +4392,34 @@ function App() {
                   ✓
                 </div>
 
-                <h3>Report Submitted</h3>
+                <h3>
+                  Report Submitted
+                </h3>
 
                 <p>
                   Your waste report has been added to the
                   community.
                 </p>
 
-                <span>+10 Green Points</span>
+                <span>
+                  +10 Green Points
+                </span>
 
                 <button
                   className="primary-btn"
                   onClick={() => {
-                    setShowReport(false);
-                    navigate("passport");
+                    setShowReport(
+                      false
+                    );
+
+                    navigate(
+                      "passport"
+                    );
                   }}
-                  style={{ marginTop: "20px" }}
+                  style={{
+                    marginTop:
+                      "20px"
+                  }}
                 >
                   View Green Passport
                 </button>
@@ -2857,7 +4432,9 @@ function App() {
   );
 }
 
-/* ================= SMALL COMPONENTS ================= */
+/* =========================================================
+   SMALL COMPONENTS
+   ========================================================= */
 
 function DashboardStat({
   icon,
@@ -2867,55 +4444,91 @@ function DashboardStat({
   return (
     <div
       style={{
-        background: "#fff",
-        padding: "22px",
-        borderRadius: "16px",
-        boxShadow: "0 5px 20px rgba(0,0,0,.04)"
+        background:
+          "#fff",
+
+        padding:
+          "22px",
+
+        borderRadius:
+          "16px",
+
+        boxShadow:
+          "0 5px 20px rgba(0,0,0,.04)"
       }}
     >
-      <div style={{ fontSize: "22px" }}>
+      <div
+        style={{
+          fontSize:
+            "22px"
+        }}
+      >
         {icon}
       </div>
 
       <span
         style={{
-          color: "#66756d",
-          fontSize: "13px"
+          color:
+            "#66756d",
+
+          fontSize:
+            "13px"
         }}
       >
         {label}
       </span>
 
-      <h2 style={{ margin: "7px 0 0" }}>
+      <h2
+        style={{
+          margin:
+            "7px 0 0"
+        }}
+      >
         {value}
       </h2>
     </div>
   );
 }
 
-function StatusBadge({ status }) {
+function StatusBadge({
+  status
+}) {
   const background =
-    status === "Completed"
+    status ===
+    "Completed"
       ? "#e5f7eb"
-      : status === "In Progress"
+      : status ===
+        "In Progress"
       ? "#fff4d6"
       : "#edf2ef";
 
   const color =
-    status === "Completed"
+    status ===
+    "Completed"
       ? "#16834f"
       : "#5d6b63";
 
   return (
     <div
       style={{
-        alignSelf: "flex-start",
-        padding: "8px 12px",
-        borderRadius: "20px",
+        alignSelf:
+          "flex-start",
+
+        padding:
+          "8px 12px",
+
+        borderRadius:
+          "20px",
+
         background,
+
         color,
-        fontWeight: "700",
-        fontSize: "12px"
+
+        fontWeight:
+          "700",
+
+        fontSize:
+          "12px"
       }}
     >
       {status}
@@ -2936,13 +4549,19 @@ function ActionCard({
         {icon}
       </div>
 
-      <h3>{title}</h3>
+      <h3>
+        {title}
+      </h3>
 
-      <p>{text}</p>
+      <p>
+        {text}
+      </p>
 
       <button
         className="primary-btn"
-        onClick={onClick}
+        onClick={
+          onClick
+        }
       >
         {button}
       </button>
@@ -2972,9 +4591,13 @@ function MissionCard({
       </div>
 
       <div className="mission-info">
-        <h3>{title}</h3>
+        <h3>
+          {title}
+        </h3>
 
-        <p>{description}</p>
+        <p>
+          {description}
+        </p>
 
         <div className="mission-tag">
           {tag}
@@ -2983,7 +4606,9 @@ function MissionCard({
 
       <button
         className="primary-btn"
-        onClick={onClick}
+        onClick={
+          onClick
+        }
       >
         {button}
       </button>
@@ -3001,16 +4626,26 @@ function TimelineStep({
   return (
     <div
       className={`timeline-step ${
-        active ? "active" : ""
+        active
+          ? "active"
+          : ""
       } ${
-        premium ? "premium" : ""
+        premium
+          ? "premium"
+          : ""
       }`}
     >
-      <div>{icon}</div>
+      <div>
+        {icon}
+      </div>
 
-      <strong>{day}</strong>
+      <strong>
+        {day}
+      </strong>
 
-      <span>{label}</span>
+      <span>
+        {label}
+      </span>
     </div>
   );
 }
@@ -3025,16 +4660,26 @@ function PlantDay({
   return (
     <div
       className={`plant-day ${
-        active ? "active" : ""
+        active
+          ? "active"
+          : ""
       } ${
-        premium ? "premium" : ""
+        premium
+          ? "premium"
+          : ""
       }`}
     >
-      <span>{icon}</span>
+      <span>
+        {icon}
+      </span>
 
-      <strong>{day}</strong>
+      <strong>
+        {day}
+      </strong>
 
-      <small>{label}</small>
+      <small>
+        {label}
+      </small>
     </div>
   );
 }
@@ -3046,16 +4691,26 @@ function PassportStat({
   return (
     <div
       style={{
-        padding: "15px",
-        borderRadius: "14px",
-        background: "rgba(255,255,255,.12)",
-        textAlign: "center"
+        padding:
+          "15px",
+
+        borderRadius:
+          "14px",
+
+        background:
+          "rgba(255,255,255,.12)",
+
+        textAlign:
+          "center"
       }}
     >
       <strong
         style={{
-          display: "block",
-          fontSize: "24px"
+          display:
+            "block",
+
+          fontSize:
+            "24px"
         }}
       >
         {value}
@@ -3063,8 +4718,11 @@ function PassportStat({
 
       <span
         style={{
-          fontSize: "12px",
-          opacity: 0.75
+          fontSize:
+            "12px",
+
+          opacity:
+            0.75
         }}
       >
         {label}
