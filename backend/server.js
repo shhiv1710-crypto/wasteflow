@@ -11,7 +11,7 @@ const upload = multer({
   storage: multer.memoryStorage()
 });
 
-// Public Python AI service
+// Deployed Python AI service
 const AI_URL = "https://wasteflow-ai.onrender.com";
 
 // Temporary report storage
@@ -154,7 +154,7 @@ app.get("/reports", (req, res) => {
   });
 });
 
-// Render provides the PORT environment variable
+// Render provides the PORT
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, "0.0.0.0", () => {
