@@ -1,4 +1,6 @@
-Flask
+flask
 flask-cors
-Pillow
-requests
+pillow
+transformers
+torch
+gunicorn

@@ -19,6 +19,7 @@ try:
         "image-classification",
         model=MODEL_NAME
     )
+
     print("WasteFlow AI model loaded successfully!")
 
 except Exception as e:
@@ -26,18 +27,25 @@ except Exception as e:
     classifier = None
 
 
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({
+        "status": "WasteFlow AI is running",
+        "model": MODEL_NAME
+    })
+
+
 @app.route("/classify", methods=["POST"])
 def classify():
 
     try:
-        # Check model
+
         if classifier is None:
             return jsonify({
                 "success": False,
                 "error": "AI model failed to load"
             }), 500
 
-        # Check image
         if "image" not in request.files:
             return jsonify({
                 "success": False,
@@ -46,12 +54,6 @@ def classify():
 
         file = request.files["image"]
 
-        print(
-            f"Received image: {file.filename} "
-            f"({file.content_length if file.content_length else 'unknown'} bytes)"
-        )
-
-        # Read image
         image_bytes = file.read()
 
         if not image_bytes:
@@ -60,38 +62,36 @@ def classify():
                 "error": "Uploaded image is empty"
             }), 400
 
-        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        image = Image.open(
+            io.BytesIO(image_bytes)
+        ).convert("RGB")
 
-        print("Image opened successfully")
-        print("Image size:", image.size)
+        print("Image opened:", image.size)
 
-        # Run AI
         results = classifier(image)
 
-        print("Raw AI results:")
-        print(results)
+        print("AI results:", results[:5])
 
-        # Best prediction
         best = results[0]
-
-        label = best["label"]
-        confidence = float(best["score"])
 
         response = {
             "success": True,
-            "prediction": label,
-            "confidence": round(confidence * 100, 2),
+            "prediction": best["label"],
+            "confidence": round(
+                float(best["score"]) * 100,
+                2
+            ),
             "raw_results": [
                 {
                     "label": r["label"],
-                    "confidence": round(float(r["score"]) * 100, 2)
+                    "confidence": round(
+                        float(r["score"]) * 100,
+                        2
+                    )
                 }
                 for r in results[:5]
             ]
         }
-
-        print("Sending response:")
-        print(response)
 
         return jsonify(response), 200
 
@@ -105,20 +105,18 @@ def classify():
         }), 500
 
 
-@app.route("/", methods=["GET"])
-def home():
-    return jsonify({
-        "status": "WasteFlow AI is running",
-        "model": MODEL_NAME
-    })
-
-
 if __name__ == "__main__":
 
-    print("Server running on port 8000")
+    port = int(
+        os.environ.get("PORT", 8000)
+    )
+
+    print(
+        f"WasteFlow AI running on port {port}"
+    )
 
     app.run(
         host="0.0.0.0",
-        port=8000,
+        port=port,
         debug=False
     )
