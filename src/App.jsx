@@ -372,7 +372,7 @@ function App() {
       setLoadingReports(true);
 
       const response = await fetch(
-        "http://127.0.0.1:5000/reports"
+        "https://wasteflow-backend-cp1x.onrender.com/reports"
       );
 
       const data = await response.json();
@@ -782,7 +782,7 @@ function App() {
 
       const response =
         await fetch(
-          "http://127.0.0.1:5000/analyze",
+          "https://wasteflow-backend-cp1x.onrender.com/analyze",
           {
             method: "POST",
             body: formData
@@ -874,7 +874,7 @@ function App() {
     try {
       const response =
         await fetch(
-          "http://127.0.0.1:5000/reports",
+          "https://wasteflow-backend-cp1x.onrender.com/reports",
           {
             method: "POST",
             headers: {
